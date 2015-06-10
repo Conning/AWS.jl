@@ -1,3 +1,210 @@
+#Additions to ec2_operations.jl: some functions missing in current Julia EC2-AWS API that are present in the EC2 API.
+#Most of the new functions relate to VPC
+function AcceptVpcPeeringConnection()
+  ec2resp::EC2Response = call_ec2(env, "AcceptVpcPeeringConnection" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = AcceptVpcPeeringConnectionResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export AcceptVpcPeeringConnection
+function AcceptVpcPeeringConnection(env::AWSEnv; kwargs...)
+    msg=AcceptVpcPeeringConnectionType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    AcceptVpcPeeringConnection(env, msg)
+end
+export AcceptVpcPeeringConnection
+
+function CreateVpcEndpoint()
+  ec2resp::EC2Response = call_ec2(env, "CreateVpcEndpoint" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = CreateVpcEndpointResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export CreateVpcEndpoint
+function CreateVpcEndpoint(env::AWSEnv; kwargs...)
+    msg=CreateVpcEndpointType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    CreateVpcEndpoint(env, msg)
+end
+export CreateVpcEndpoint
+
+function CreateVpcPeeringConnection()
+  ec2resp::EC2Response = call_ec2(env, "CreateVpcPeeringConnection" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = CreateVpcPeeringConnectionResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export CreateVpcPeeringConnection()
+function CreateVpcPeeringConnection(env::AWSEnv; kwargs...)
+    msg=CreateVpcPeeringConnectionType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    CreateVpcPeeringConnection(env, msg)
+end
+export CreateVpcPeeringConnection
+
+function DeleteVpcEndpoints()
+  ec2resp::EC2Response = call_ec2(env, "DeleteVpcEndpoints" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DeleteVpcEndpointsResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DeleteVpcEndpoints
+function DeleteVpcEndpoints(env::AWSEnv; kwargs...)
+    msg=DeleteVpcEndpointsType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DeleteVpcEndpoints(env, msg)
+end
+export DeleteVpcEndpoints
+
+function DeleteVpcPeeringConnection()
+  ec2resp::EC2Response = call_ec2(env, "DeleteVpcPeeringConnection" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DeleteVpcPeeringConnectionResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DeleteVpcPeeringConnection
+function DeleteVpcPeeringConnection(env::AWSEnv; kwargs...)
+    msg=DeleteVpcPeeringConnectionType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DeleteVpcPeeringConnection(env, msg)
+end
+export DeleteVpcPeeringConnection
+
+function DescribePrefixLists()
+  ec2resp::EC2Response = call_ec2(env, "DescribePrefixLists" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DescribePrefixListsResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DescribePrefixLists
+function DescribePrefixLists(env::AWSEnv; kwargs...)
+    msg=DescribePrefixListsType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DescribePrefixLists(env, msg)
+end
+export DescribePrefixLists
+
+function DescribeVpcEndpointServices()
+  ec2resp::EC2Response = call_ec2(env, "DescribeVpcEndpointServices" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DescribeVpcEndpointServicesResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DescribeVpcEndpointServices
+function DescribeVpcEndpointServices(env::AWSEnv; kwargs...)
+    msg=DescribeVpcEndpointServicesType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DescribeVpcEndpointServices(env, msg)
+end
+export DescribeVpcEndpointServices
+
+function DescribeVpcEndpoints()
+  ec2resp::EC2Response = call_ec2(env, "DescribeVpcEndpoints" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DescribeVpcEndpointsResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DescribeVpcEndpoints
+function DescribeVpcEndpoints(env::AWSEnv; kwargs...)
+    msg=DescribeVpcEndpointsType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DescribeVpcEndpoints(env, msg)
+end
+export DescribeVpcEndpoints
+
+function DescribeVpcPeeringConnection()
+  ec2resp::EC2Response = call_ec2(env, "DescribeVpcPeeringConnection" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = DescribeVpcPeeringConnectionResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export DescribeVpcPeeringConnection
+function DescribeVpcPeeringConnection(env::AWSEnv; kwargs...)
+    msg=DescribeVpcPeeringConnectionType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DescribeVpcPeeringConnection(env, msg)
+end
+export DescribeVpcPeeringConnection
+
+function ModifySubnetAttribute()
+  ec2resp::EC2Response = call_ec2(env, "ModifySubnetAttribute" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = ModifySubnetAttributeResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export ModifySubnetAttribute
+function ModifySubnetAttribute(env::AWSEnv; kwargs...)
+    msg=ModifySubnetAttributeType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    ModifySubnetAttribute(env, msg)
+end
+export ModifySubnetAttribute
+
+function ModifyVpcEndpoint()
+  ec2resp::EC2Response = call_ec2(env, "ModifyVpcEndpoint" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = ModifyVpcEndpointResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export ModifyVpcEndpoint
+function ModifyVpcEndpoint(env::AWSEnv; kwargs...)
+    msg=ModifyVpcEndpointType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    ModifyVpcEndpoint(env, msg)
+end
+export ModifyVpcEndpoint
+
+function RejectVpcPeeringConnection()
+  ec2resp::EC2Response = call_ec2(env, "RejectVpcPeeringConnection" , msg)
+    if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
+        ec2resp.obj = RejectVpcPeeringConnectionResponseType(ec2resp.pd)
+    end
+    ec2resp
+end
+export RejectVpcPeeringConnection
+function RejectVpcPeeringConnection(env::AWSEnv; kwargs...)
+    msg=RejectVpcPeeringConnectionType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    RejectVpcPeeringConnection(env, msg)
+end
+export RejectVpcPeeringConnection
+
+
 function ActivateLicense(env::AWSEnv, msg::ActivateLicenseType)
     ec2resp::EC2Response = call_ec2(env, "ActivateLicense" , msg)
     if  (ec2resp.pd != nothing) && (ec2resp.obj == nothing)
