@@ -1,8 +1,567 @@
+#types that were missing in the Julia AWS API that are required for ec2_operations.jl
+
+using LibExpat
+using AWS
+
+#types, return types, and associated functions for AcceptVpcPeeringConnection()
+type VpcPeeringConnectionVpcInfoType
+  ownerId::Union(ASCIIString, Nothing)
+  vpcId::Union(ASCIIString, Nothing)
+  cidrBlock::Union(ASCIIString, Nothing)
+
+  VpcPeeringConnectionVpcInfoType(; ownerId=nothing, vpcId=nothing, cidrBlock=nothing) = new(ownerId, vpcId, cidrBlock)
+end
+function VpcPeeringConnectionVpcInfoType(pd::ETree)
+  o = VpcPeeringConnectionVpcInfoType()
+  o.ownerId = LibExpat.find(pd, "ownerId#string")
+  o.vpcId = LibExpat.find(pd, "vpcId#string")
+  o.cidrBlock = LibExpat.find(pd, "cidrBlock#string")
+  o
+end
+export VpcPeeringConnectionVpcInfoType
+
+type VpcPeeringConnectionStateReasonType
+  code::Union(ASCIIString, Nothing)
+  message::Union(ASCIIString, Nothing)
+
+  VpcPeeringConnectionStateReasonType(; code=nothing, message=nothing) = new(code, message)
+end
+function VpcPeeringConnectionStateReasonType(pd::ETree)
+  o = VpcPeeringConnectionStateReasonType()
+  o.code = LibExpat.find(pd, "code#string")
+  o.message = LibExpat.find(pd, "message#string")
+  o
+end
+export VpcPeeringConnectionStateReasonType
+
+type ResourceTagSetItemType  # From later (~line 4000)
+    key::Union(ASCIIString, Nothing)
+    value::Union(ASCIIString, Nothing)
+
+    ResourceTagSetItemType(; key=nothing, value=nothing) =
+         new(key, value)
+end
+function ResourceTagSetItemType(pd::ETree)
+    o = ResourceTagSetItemType()
+    o.key = LibExpat.find(pd, "key#string")
+    o.value = LibExpat.find(pd, "value#string")
+    o
+end
+export ResourceTagSetItemType
+
+type VpcPeeringConnectionType
+  vpcPeeringConnectionId::Union(ASCIIString, Nothing)
+  requesterVpcInfo::Union(Vector{VpcPeeringConnectionVpcInfoType}, Nothing)
+  accepterVpcInfo::Union(Vector{VpcPeeringConnectionVpcInfoType}, Nothing)
+  status::Union(Vector{VpcPeeringConnectionStateReasonType}, Nothing)
+  expirationTime::Union(Base.Dates.DateTime, Nothing)
+  tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
+
+  VpcPeeringConnectionType(; vpcPeeringConnectionId=nothing, requesterVpcInfo=nothing, accepterVpcInfo=nothing, status=nothing,
+                           expirationTime=nothing, tagSet=nothing) = new(vpcPeeringConnectionId, requesterVpcInfo,
+                                                                         accepterVpcInfo, status, expirationTime, tagSet)
+end
+function VpcPeeringConnectionType(pd::ETree)
+  o = VpcPeeringConnectionType()
+  o.vpcPeeringConnectionId = LibExpat.find(pd, "vpcPeeringConnectionId#string")
+  o.requesterVpcInfo = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionVpcInfoType, LibExpat.find(pd, "requesterVpcInfo"))
+  o.accepterVpcInfo = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionVpcInfoType, LibExpat.find(pd, "accepterVpcInfo"))
+  o.status = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionStateReasonType, LibExpat.find(pd, "status"))
+  o.expirationTime = AWS.safe_parse_as(DateTime, LibExpat.find(pd, "expirationTime#string"))
+  o.tagSet = AWS.@parse_vector(AWS.EC2.ResourceTagSetItemType, LibExpat.find(pd, "tagSet/item"))
+  o
+end
+export VpcPeeringConnectionType
+
+type AcceptVpcPeeringConnectionType
+  vpcPeeringConnectionId::Union(ASCIIString, Nothing)
+
+  AcceptVpcPeeringConnectionType(; vpcPeeringConnectionId=nothing) = new(vpcPeeringConnectionId)
+end
+function AcceptVpcPeeringConnectionType(pd::ETree)
+  o = AcceptVpcPeeringConnectionType()
+  o.vpcPeeringConnectionId = LibExpat.find(pd, "vpcPeeringConnectionId#string")
+  o
+end
+export AcceptVpcPeeringConnectionType
+
+type AcceptVpcPeeringConnectionResponseType
+  requestID::Union(ASCIIString, Nothing)
+  vpcPeeringConnection::Union(Vector{VpcPeeringConnectionType}, Nothing)
+
+  AcceptVpcPeeringConnectionResponseType(; requestId=nothing, vpcPeeringConnection=nothing) = new(requestId, vpcPeeringConnection)
+end
+function AcceptVpcPeeringConnectionResponseType(pd::ETree)
+  o = AcceptVPcPeeringConnectionResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o.vpcPeeringConnection = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionType, LibExpat.find(pd, "vpcPeeringConnection"))
+  o
+end
+export AcceptVpcPeeringConnectionResponseType
+
+
+#types, return types, and associated functions for CreateVpcEndpoint (currently undefined in WSDL?)
+type CreateVpcEndpointType
+  clientToken::Union(ASCIIString, Nothing)
+  policyDocument::Union(ASCIIString, Nothing)
+  routeTableIdSet::Union(Vector{ASCIIString}, Nothing)
+  serviceName::Union(ASCIIString, Nothing)
+  vpcId::Union(ASCIIString, Nothing)
+
+  CreateVpcEndpointType(; clientToken=nothing, policyDocument=nothing, routeTableIdSet=nothing, serviceName=nothing,
+                        vpcId=nothing) = new(clientToken, policyDocument, routeTableId, serviceName, vpcId)
+end
+function CreateVpcEndpointType(pd::ETree)
+  o = CreateVpcEndpointType()
+  clientToken = LibExpat.find(pd, "clientToken#string")
+  policyDocument = LibExpat.find(pd, "policyDocument#string")
+  routeTableIdSet = AWS.parse_vector_as(ASCIIString, "routeTableId", LibExpat.find(pd, "item/routeTableId"))
+  serviceName = LibExpat.find(pd, "serviceName#string")
+  vpcId = LibExpat.find(pd, "vpcId#string")
+  o
+end
+export CreateVpcEndpointType
+
+type VpcEndpointType
+  creationTimestamp::Union(Base.Dates.DateTime, Nothing)
+  policyDocument::Union(ASCIIString, Nothing)
+  routeTableIdSet::Union(Vector{ASCIIString}, Nothing)
+  serviceName::Union(ASCIIString, Nothing)
+  state::Union(ASCIIString, Nothing)
+  vpcEndpointId::Union(ASCIIString, Nothing)
+  vpcId::Union(ASCIIString, Nothing)
+
+  VpcEndpointType(; creationTimestamp=nothing, policyDocument=nothing, routeTableIdSet=nothing, serviceName=nothing,
+              state=nothing, vpcEndpointId=nothing, vpcId=nothing) = new(creationTimestamp, policyDocument,
+                                                                         routeTableIdSet, serviceName, state, vpcEndpointId, vpcId)
+end
+function VpcEndpointType(pd::ETree)
+  o = VpcEndpointType()
+  o.creationTimestamp = AWS.safe_parse_as(DateTime, LibExpat.find(pd, "creationTimestamp#string"))
+  o.policyDocument = LibExpat.find(pd, "policyDocument#string")
+  o.routeTableIdSet = AWS.parse_vector_as(ASCIIString, "routeTableId", LibExpat.find(pd, "item/routeTableId"))
+  o.serviceName = LibExpat.find(pd, "serviceName#string")
+  o.state = LibExpat.find(pd, "state#string")
+  o.vpcEndpointId = LibExpat.find(pd, "vpcEndpointId#string")
+  o.vpcId = LibExpat.find(pd, "vpdId#string")
+  o
+end
+export VpcEndpointType
+
+type CreateVpcEndpointResponseType
+  clientToken::Union(ASCIIString, Nothing)
+  requestId::Union(ASCIIString, Nothing)
+  vpcEndpoint::Union(Vector{VpcEndpointType}, Nothing)
+
+  CreateVpcEndpointResponseType(; clientToken=nothing, requestId=nothing, vpcEndpoint=nothing) =
+    new(clientToken, requestId, vpcEndpoint)
+end
+function CreateVpcEndpointResponseType(pd::ETree)
+  o = CreateVpcEndpointResponseType()
+  o.clientToken = LibExpat.find(pd, "clientToken#string")
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o.vpcEndpoint = AWS.@parse_vector(AWS.EC2.VpcEndpointType, LibExpat.find(pd, "vpcEndpoint"))
+  o
+end
+export CreateVpcEndpointResponseType
+
+#types, return types, and associated functions for CreateVpcPeeringConnection
+type CreateVpcPeeringConnectionType
+  vpcId::Union(ASCIIString, Nothing)
+  peerVpcId::Union(ASCIIString, Nothing)
+  peerOwnerId::Union(ASCIIString, Nothing)
+
+  CreateVpcPeeringConnectionType(; vpcId=nothing, peerVpcId=nothing, peerOwnerId=nothing) =
+    new(vpcId, peerVpcId, peerOwnerId)
+end
+function CreateVpcPeeringConnectionType(pd::ETree)
+  o = CreateVpcPeeringConnectionType()
+  o.vpcId = LibExpat.find(pd, "vpcId#string")
+  o.peerVpcId = LibExpat.find(pd, "peerVpcId#string")
+  o.peerOwnerId = LibExpat.find(pd, "peerOwnerId#string")
+  o
+end
+export CreateVpcPeeringConnectionType
+
+type CreateVpcPeeringConnectionResponseType
+  requestId::Union(ASCIIString, Nothing)
+  vpcPeeringConnection::Union(Vector{VpcPeeringConnectionType}, Nothing)
+
+  CreateVpcPeeringConnectionResponseType(; requestId=nothing, vpcPeeringConnection=nothing) =
+    new(requestId, vpcPeeringConnection)
+end
+function CreateVpcPeeringConnectionResponseType(pd::ETree)
+  o = CreateVpcPeeringConnectionResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o.vpcPeeringConnection = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionType, LibExpat.find(pd, "vpcPeeringConnection"))
+  o
+end
+export CreateVpcPeeringConnectionResponseType
+
+#types, return types, and associated function for DeleteVpcEndpoints
+type DeleteVpcEndpointsType
+  vpcEndpointIdSet::Union(Vector{ASCIIString}, Nothing)
+
+  DeleteVpcEndpointsType(; vpcEndpointIdSet=nothing) = new(vpcEndpointIdSet)
+end
+function DeleteVpcEndpointsType(pd::ETree)
+  o = DeleteVpcEndpointsType()
+  o.vpcEndpointIdSet = AWS.parse_vector_as(ASCIIString, "vpcEndpointId", LibExpat.find(pd, "item/vpcEndpointId"))
+end
+export DeleteVpcEndpointsType
+
+type UnsuccessfulItemErrorType
+  code::Union(ASCIIString, Nothing)
+  message::Union(ASCIIString, Nothing)
+
+  UnsuccessfulItemErrorType(; code=nothing, message=nothing) = new(code, message)
+end
+function UnsuccessfulItemErrorType(pd::ETree)
+  o = UnsuccessfulItemErrorType()
+  o.code = LibExpat.find(pd, "code#string")
+  o.message = LibExpat.find(pd, "message#string")
+  o
+end
+export UnsuccessfulItemErrorType
+
+type UnsuccessfulItemType
+  error::Union(Vector{UnsuccessfulItemErrorType}, Nothing)
+  resourceId::Union(ASCIIString, Nothing)
+
+  UnsuccessfulItemType(; error=nothing, resourceId=nothing) = new(error, resourceId)
+end
+function UnsuccessfulItemType(pd::ETree)
+  o = UnsuccessfulItemType()
+  o.error = AWS.@parse_vector(AWS.EC2.UnsuccessfulItemErrorType, LibExpat.find(pd, "error"))
+  o.resourceId = LibExpat.find(pd, "resourceId#string")
+  o
+end
+export UnsuccessfulItemType
+
+
+type DeleteVpcEndpointsResponseType
+  requestId::Union(ASCIIString, Nothing)
+  unsuccessful::Union(Vector{UnsuccessfulItemType}, Nothing)
+
+  DeleteVpcEndpointsResponseType(; requestId=nothing, unsucessful=nothing) = new(requestId, unsuccessful)
+end
+function DeleteVpcEndpointsResponseType(pd::ETree)
+  o = DeleteVpcEndpointsResponseType()
+  o.requestId = LibExpat.find("requestId#string")
+  o.unsuccessful = AWS.@parse_vector(AWS.EC2.UnsuccessfulItemType, LibExpat.find(pd, "unsuccessful"))
+end
+export DeleteVpcEndpointsResponseType
+
+type VpcEndpointIdSetItemType
+    vpcEndpointId::Union(ASCIIString, Nothing)
+
+    VpcEndpointIdSetItemType(; vpcEndpointId=nothing) =
+         new(vpcEndpointId)
+end
+function VpcEndpointIdSetItemType(pd::ETree)
+    o = VpcEndpointIdSetItemType()
+    o.vpcEndpointId = LibExpat.find(pd, "vpcEndpointId#string")
+    o
+end
+export VpcEndpointIdSetItemType
+
+#types, return types, and associated function for DeleteVpcPeeringConnection
+type DeleteVpcPeeringConnectionType
+  vpcPeeringConnectionId::Union(ASCIIString, Nothing)
+
+  DeleteVpcPeeringConnectionType(; vpcPeeringConnectionID=nothing) = new(vpcPeeringConnectionId)
+end
+function DeleteVpcPeeringConnectionType(pd::ETree)
+  o = DeleteVpcPeeringConnectionType()
+  o.vpcPeeringConnectionId = LibExpat.find(pd, "vpcPeeringConnectionId#string")
+  o
+end
+export DeleteVpcPeeringConnectionType
+
+type DeleteVpcPeeringConnectionResponseType
+  requestId::Union(ASCIIString, Nothing)
+  _return::Union(Bool, Nothing)
+
+  DeleteVpcPeeringConnectionResponseType(; requestId=nothing, _return=nothing) = new(requestId, _return)
+end
+function DeleteVpcPeeringConnectionResponseType(pd::ETree)
+  o = DeleteVpcPeeringConnectionResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o._return = AWS.safe_parse_as(Bool, LibExpat.find(pd, "return#string"))
+  o
+end
+export DeleteVpcPeeringConnectionResponseType
+
+#types, return types, and associated function for DescribePrefixList
+
+type FilterType  # From later in this file
+    name::Union(ASCIIString, Nothing)
+    valueSet::Union(Vector{ASCIIString}, Nothing)
+
+    FilterType(; name=nothing, valueSet=nothing) =
+         new(name, valueSet)
+end
+function FilterType(pd::ETree)
+    o = FilterType()
+    o.name = LibExpat.find(pd, "name#string")
+    o.valueSet = AWS.parse_vector_as(ASCIIString, "value", LibExpat.find(pd, "item/value"))
+    o
+end
+
+export FilterType
+
+type DescribePrefixListsType
+  filterSet::Union(Vector{FilterType}, Nothing)
+  maxResults::Union(Int64, Nothing)
+  nextToken::Union(ASCIIString, Nothing)
+  prefixListIdSet::Union(Vector{ASCIIString}, Nothing)
+
+  DescribePrefixListsType(; filterSet=nothing, maxResults=nothing, nextToken=nothing, prefixListIdSet=nothing) =
+    new(filterSet, maxResults, nextToken, prefixListIdSet)
+end
+function DescribePrefixListsType(pd::ETree)
+  o = DescribePrefixListsType()
+  o.filterSet = AWS.@parse_vector(AWS.EC2.FilterType, LibExpat.find(pd, "filterSet/item"))
+  o.maxResults = AWS.safe_parse_as(Int64, LibExpat.find(pd, "maxResults#string"))
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o.prefixListIdSet = AWS.parse_vector_as(ASCIIString, "prefixListId", LibExpat.find(pd, "item/prefixListId"))
+  o
+end
+export DescribePrefixListsType
+
+type PrefixListType
+  cidrs::Union(Vector{ASCIIString}, Nothing)
+  prefixListId::Union(ASCIIString, Nothing)
+  prefixListName::Union(ASCIIString, Nothing)
+
+  PrefixListType(; cidrs=nothing, prefixListId=nothing, prefixListName=nothing) = new(cidrs, prefixListId, prefixListName)
+end
+function PrefixListType(pd::ETree)
+  o = PrefixListType()
+  o.cidrs = AWS.parse_vector_as(ASCIIString, "cidr", LibExpat.find(pd, "item/cidr"))
+  o.prefixListId = LibExpat.find(pd, "prefixListId#string")
+  o.prefixListName = LibExpat.find(pd, "prefixListName#string")
+  o
+end
+export PrefixListType
+
+type DescribePrefixListsResponseType
+  nextToken::Union(ASCIIString, Nothing)
+  prefixListSet::Union(Vector{PrefixListType}, Nothing)
+  requestId::Union(ASCIIString, Nothing)
+
+  DescribePrefixListsResponseType(; nextToken=nothing, prefixListSet=nothing, requestId=nothing) =
+    new(nextToken, prefixListSet, requestId)
+end
+function DescribePrefixListsResponseType(pd::ETree)
+  o = DescribePrefixListsResponseType()
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o.prefixListSet = AWS.parse_vector_as(ASCIIString, "prefixList", LibExpat.find(pd, "item/prefixList"))
+  o
+end
+export DescribePrefixListsType
+
+
+#types, return types, and associated function for DescribeVpcEndpointServices
+type DescribeVpcEndpointServicesType
+  maxResults::Union(Int64, Nothing)
+  nextToken::Union(ASCIIString, Nothing)
+
+  DescribeVpcEndpointServicesType(; maxResults=nothing, nextToken=nothing) = new(maxResults, nextToken)
+end
+function DescribeVpcEndpointServicesType(pd::ETree)
+  o = DescribeVpcEndpointServicesType()
+  o.maxResults = AWS.safe_parse_as(Int64, LibExpat.find(pd, "maxResults#string"))
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o
+end
+export DescribeVpcEndpointServicesType
+
+type DescribeVpcEndpointServicesResponseType
+  nextToken::Union(ASCIIString, Nothing)
+  requestId::Union(ASCIIString, Nothing)
+  serviceNameSet::Union(Vector{ASCIIString}, Nothing)
+
+  DescribeVpcEndpointServicesResponseType(; nextToken=nothing, requestId=nothing, serviceNameSet=nothing) =
+    new(nextToken, requestId, serviceNameSet)
+end
+function DescribeVpcEndpointServicesResponseType(pd::ETree)
+  o = DescribeVpcEndpointServicesResponseType()
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o.serviceNameSet = AWS.parse_vector_as(ASCIIString, "serviceName", LibExpat.find(pd, "item/serviceName"))
+end
+export DescribeVpcEndpointServicesResponseType
+
+#types, return types, and associated function for DescribeVpcEndpoints
+type DescribeVpcEndpointsType
+  filterSet::Union(Vector{FilterType}, Nothing)
+  maxResults::Union(Int64, Nothing)
+  nextToken::Union(ASCIIString, Nothing)
+  vpcEndpointIdSet::Union(Vector{ASCIIString}, Nothing)
+
+  DescribeVpcEndpointsType(; filterSet=nothing, maxResults=nothing, nextToken=nothing, vpcEndpointIdSet=nothing) =
+    new(filterSet, maxResults, nextToken, vpcEndpointIdSet)
+end
+function DescribeVpcEndpointsType(pd::ETree)
+  o = DescribeVpcEndpointsType()
+  o.filterSet = AWS.@parse_vector(AWS.EC2.FilterType, LibExpat.find(pd, "filterSet/item"))
+  o.maxResults = AWS.safe_parse_as(Int64, LibExpat.find(pd, "maxResults#string"))
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o.vpcEndpointIdSet = AWS.@parse_vector(AWS.EC2.VpcEndpointType, LibExpat.find(pd, "vcpEndpointId/item"))
+  o
+end
+export DescribeVpcEndpointsType
+
+type DescribeVpcEndpointsResponseType
+  nextToken::Union(ASCIIString, Nothing)
+  requestId::Union(ASCIIString, Nothing)
+  vpcEndpointIdSet::Union(Vector{ASCIIString}, Nothing)
+
+  DescribeVpcEndpointsResponseType(; nextToken=nothing, requestId=nothing, vpcEndpointIdSet=nothing) =
+    new(nextToken, requestId, vpcEndpointIdSet)
+end
+function DescribeVpcEndpointsResponseType(pd::ETree)
+  o = DescribeVpcEndpointsResponseType()
+  o.nextToken = LibExpat.find(pd, "nextToken#string")
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  #o.vpcEndpointIdSet = AWS.@parse_vector(AWS.EC2.VpcEndpointType, LibExpat.find(pd, "vcpEndpointId/item"))
+  o
+end
+export DescribeVpcEndpointsResponseType
+
+#types, return types, and associated function for DescribeVpcPeeringConnections
+type DescribeVpcPeeringConnectionsType
+  filterSet::Union(Vector{FilterType}, Nothing)
+  vpcPeeringConnectionIdSet::Union(Vector{ASCIIString}, Nothing)
+
+  DescribeVpcPeeringConnectionsType(; filterSet=nothing, vpcPeeringConnectionIdSet=nothing) =
+    new(filterSet, vpcPeeringConnectionIdSet)
+end
+function DescribeVpcPeeringConnectionsType(pd::ETree)
+  o = DescribeVpcPeeringConnectionsType()
+  o.filterSet = AWS.@parse_vector(AWS.EC2.FilterType, LibExpat.find(pd, "filterSet/item"))
+  o.vpcPeeringConnectionIdSet = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionType, LibExpat.find(pd, "vcpPeeringConnectionId/item"))
+  o
+end
+export DescribeVpcPeeringConnectionsType
+
+type DescribeVpcPeeringconnectionsResponseType
+  requestId::Union(ASCIIString, Nothing)
+  vpcPeeringConnectionSet::Union(Vector{VpcPeeringConnectionType}, Nothing)
+
+  DescribeVpcPeeringConnectionsResponseType(; responseId=nothing, vpcPeeringConnectionSet=nothing) =
+    new(responseId, vpcPeeringConnectionSet)
+end
+function DescribeVpcPeeringConnectionsResponseType(pd::ETree)
+  o = DescribeVpcPeeringConnectionsResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o.vpcPeeringConnectionSet = AWS.@parse_vector(AWS.EC2.VpcPeeringConnectionType, LibExpat.find(pd, "vcpPeeringConnection/item"))
+  o
+end
+export DescribeVpcPeeringConnectionsResponseType
+
+#types, return types, and associated function for ModifySubnetAttribute
+type ModifySubnetAttributeType
+  mapPublicIpOnLaunch::Union(Bool, Nothing)
+  subnetId::Union(ASCIIString, Nothing)
+
+  ModifySubnetAttributeType(; mapPublicIpOnLaunch=nothing, subnetId=nothing) =
+    new(mapPublicIpOnLaunch, subnetId)
+end
+function ModifySubnetAttributeType(pd::ETree)
+  o = ModifySubnetAttributeType()
+  o.mapPublicIpOnLaunch = AWS.safe_parse_as(Bool, LibExpat.find(pd, "mapPublicIpOnLaunch#string"))
+  o.subnetId = LibExpat.find(pd, "subnetId#string")
+  o
+end
+export ModifySubnetAttributeType
+
+type ModifySubnetAttributeResponseType
+  requestId::Union(ASCIIString, Nothing)
+  _return::Union(Bool, Nothing)
+
+  ModifySubnetAttributeResponseType(; requestId=nothing, _return=nothing) = new(requestId, _return)
+end
+function ModifySubnetAttributeResponseType(pd::ETree)
+  o = ModifySubnetAttributeResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o._return = AWS.safe_parse_as(bool, LibExpat.find(pd, "return#string"))
+  o
+end
+export ModifySubnetAttributeResponseType
+
+#types, return types, and associated function for ModifyVpcEndpoint
+type ModifyVpcEndpointType
+  addRouteTableIdSet::Union(Vector{ASCIIString}, Nothing)
+  policyDocument::Union(ASCIIString, Nothing)
+  removeRouteTableIdSet::Union(Vector{ASCIIString}, Nothing)
+  resetPolicy::Union(Bool, Nothing)
+  vpcEndpointId::Union(ASCIIString, Nothing)
+
+  ModifyVpcEndpointType(; addRouteTableIdSet=nothing, policyDocument=nothing, removeRouteTableIdSet=nothing,
+                        resetPolicy=nothing, vpcEndpointId=nothing) = new(addRouteTableIdSet, policyDocument,
+                                                                          removeRouteTableIdSet, resetPolicy, vpcEndpointId)
+end
+function ModifyVpcEndpointType(pd::ETree)
+  o = ModifyVpcEndpointType()
+  o.addRouteTableIdSet = AWS.parse_vector_as(ASCIIString, "routeTableId", LibExpat.find(pd, "item/routeTableId"))
+  o.policyDocument = LibExpat.find(pd, "policyDocument#string")
+  o.removeRouteTableIdSet = AWS.parse_vector_as(ASCIIString, "routeTableId", LibExpat.find(pd, "item/routeTableId"))
+  o.resetPolicy = AWS.safe_parse_as(Bool, LibExpat.find(pd, "resetPolicy"))
+  o.vpcEndpointId = LibExpat.find(pd, "vpcEndpointId#string")
+  o
+end
+export ModifyVpcEndpointType
+
+type ModifyVpcEndpointResponseType
+  requestId::Union(ASCIIString, Nothing)
+  _return::Union(Bool, Nothing)
+
+  ModifyVpcEndpointResponseType(; requestId=nothing, _return=nothing) = new(requestId, _return)
+end
+function ModifyVpcEndpointResponseType(pd::ETree)
+  o = ModifyVpcEndpointResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o._return = AWS.safe_parse_as(bool, LibExpat.find(pd, "return#string"))
+  o
+end
+export ModifyVpcEndpointResponseType
+
+#types, return types, and associated function for RejectVpcPeeringConnection
+type RejectVpcPeeringConnectionType
+  vpcPeeringConnectionId::Union(ASCIIString, Nothing)
+
+  RejectVpcPeeringConnectionType(; vpcPeeringConnectionId=nothing) = new(vpcPeeringConnectionId)
+end
+function RejectVpcPeeringConnectionType(pd::ETree)
+  o = RejectVpcPeeringConnectionType()
+  o.vpcPeeringConnectionId = LibExpat.find(pd, "vpcPeeringConnectionId#string")
+  o
+end
+export RejectVpcPeeringConnectionType
+
+type RejectVpcPeeringConnectionResponseType
+  requestId::Union(ASCIIString, Nothing)
+  _return::Union(Bool, Nothing)
+
+  RejectVpcPeeringConnectionResponseType(; requestId=nothing, _return=nothing) = new(requestId, _return)
+end
+function RejectVpcPeeringConnectionResponseType(pd::ETree)
+  o = RejectVpcPeeringConnectionResponseType()
+  o.requestId = LibExpat.find(pd, "requestId#string")
+  o._return = AWS.safe_parse_as(Bool, LibExpat.find(pd, "return#string"))
+  o
+end
+export RejectVpcPeeringConnectionResponseType
+
+
+#the original types contained in the Julia AWS API
 type CreateImageResponseType
     requestId::Union(ASCIIString, Nothing)
     imageId::Union(ASCIIString, Nothing)
 
-    CreateImageResponseType(; requestId=nothing, imageId=nothing) = 
+    CreateImageResponseType(; requestId=nothing, imageId=nothing) =
          new(requestId, imageId)
 end
 function CreateImageResponseType(pd::ETree)
@@ -19,7 +578,7 @@ type RegisterImageResponseType
     requestId::Union(ASCIIString, Nothing)
     imageId::Union(ASCIIString, Nothing)
 
-    RegisterImageResponseType(; requestId=nothing, imageId=nothing) = 
+    RegisterImageResponseType(; requestId=nothing, imageId=nothing) =
          new(requestId, imageId)
 end
 function RegisterImageResponseType(pd::ETree)
@@ -35,7 +594,7 @@ export RegisterImageResponseType
 type DeregisterImageType
     imageId::Union(ASCIIString, Nothing)
 
-    DeregisterImageType(; imageId=nothing) = 
+    DeregisterImageType(; imageId=nothing) =
          new(imageId)
 end
 function DeregisterImageType(pd::ETree)
@@ -51,7 +610,7 @@ type DeregisterImageResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeregisterImageResponseType(; requestId=nothing, _return=nothing) = 
+    DeregisterImageResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeregisterImageResponseType(pd::ETree)
@@ -67,7 +626,7 @@ export DeregisterImageResponseType
 type CreateKeyPairType
     keyName::Union(ASCIIString, Nothing)
 
-    CreateKeyPairType(; keyName=nothing) = 
+    CreateKeyPairType(; keyName=nothing) =
          new(keyName)
 end
 function CreateKeyPairType(pd::ETree)
@@ -85,7 +644,7 @@ type CreateKeyPairResponseType
     keyFingerprint::Union(ASCIIString, Nothing)
     keyMaterial::Union(ASCIIString, Nothing)
 
-    CreateKeyPairResponseType(; requestId=nothing, keyName=nothing, keyFingerprint=nothing, keyMaterial=nothing) = 
+    CreateKeyPairResponseType(; requestId=nothing, keyName=nothing, keyFingerprint=nothing, keyMaterial=nothing) =
          new(requestId, keyName, keyFingerprint, keyMaterial)
 end
 function CreateKeyPairResponseType(pd::ETree)
@@ -104,7 +663,7 @@ type ImportKeyPairType
     keyName::Union(ASCIIString, Nothing)
     publicKeyMaterial::Union(ASCIIString, Nothing)
 
-    ImportKeyPairType(; keyName=nothing, publicKeyMaterial=nothing) = 
+    ImportKeyPairType(; keyName=nothing, publicKeyMaterial=nothing) =
          new(keyName, publicKeyMaterial)
 end
 function ImportKeyPairType(pd::ETree)
@@ -122,7 +681,7 @@ type ImportKeyPairResponseType
     keyName::Union(ASCIIString, Nothing)
     keyFingerprint::Union(ASCIIString, Nothing)
 
-    ImportKeyPairResponseType(; requestId=nothing, keyName=nothing, keyFingerprint=nothing) = 
+    ImportKeyPairResponseType(; requestId=nothing, keyName=nothing, keyFingerprint=nothing) =
          new(requestId, keyName, keyFingerprint)
 end
 function ImportKeyPairResponseType(pd::ETree)
@@ -139,7 +698,7 @@ export ImportKeyPairResponseType
 type DeleteKeyPairType
     keyName::Union(ASCIIString, Nothing)
 
-    DeleteKeyPairType(; keyName=nothing) = 
+    DeleteKeyPairType(; keyName=nothing) =
          new(keyName)
 end
 function DeleteKeyPairType(pd::ETree)
@@ -155,7 +714,7 @@ type DeleteKeyPairResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteKeyPairResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteKeyPairResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteKeyPairResponseType(pd::ETree)
@@ -171,7 +730,7 @@ export DeleteKeyPairResponseType
 type DescribeKeyPairsItemType
     keyName::Union(ASCIIString, Nothing)
 
-    DescribeKeyPairsItemType(; keyName=nothing) = 
+    DescribeKeyPairsItemType(; keyName=nothing) =
          new(keyName)
 end
 function DescribeKeyPairsItemType(pd::ETree)
@@ -187,7 +746,7 @@ type DescribeKeyPairsResponseItemType
     keyName::Union(ASCIIString, Nothing)
     keyFingerprint::Union(ASCIIString, Nothing)
 
-    DescribeKeyPairsResponseItemType(; keyName=nothing, keyFingerprint=nothing) = 
+    DescribeKeyPairsResponseItemType(; keyName=nothing, keyFingerprint=nothing) =
          new(keyName, keyFingerprint)
 end
 function DescribeKeyPairsResponseItemType(pd::ETree)
@@ -204,7 +763,7 @@ type IamInstanceProfileRequestType
     arn::Union(ASCIIString, Nothing)
     name::Union(ASCIIString, Nothing)
 
-    IamInstanceProfileRequestType(; arn=nothing, name=nothing) = 
+    IamInstanceProfileRequestType(; arn=nothing, name=nothing) =
          new(arn, name)
 end
 function IamInstanceProfileRequestType(pd::ETree)
@@ -221,7 +780,7 @@ type PrivateIpAddressesSetItemRequestType
     privateIpAddress::Union(ASCIIString, Nothing)
     primary::Union(Bool, Nothing)
 
-    PrivateIpAddressesSetItemRequestType(; privateIpAddress=nothing, primary=nothing) = 
+    PrivateIpAddressesSetItemRequestType(; privateIpAddress=nothing, primary=nothing) =
          new(privateIpAddress, primary)
 end
 function PrivateIpAddressesSetItemRequestType(pd::ETree)
@@ -238,7 +797,7 @@ type ImportInstanceGroupItemType
     groupId::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    ImportInstanceGroupItemType(; groupId=nothing, groupName=nothing) = 
+    ImportInstanceGroupItemType(; groupId=nothing, groupName=nothing) =
          new(groupId, groupName)
 end
 function ImportInstanceGroupItemType(pd::ETree)
@@ -255,7 +814,7 @@ type GroupItemType
     groupId::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    GroupItemType(; groupId=nothing, groupName=nothing) = 
+    GroupItemType(; groupId=nothing, groupName=nothing) =
          new(groupId, groupName)
 end
 function GroupItemType(pd::ETree)
@@ -271,7 +830,7 @@ export GroupItemType
 type UserDataType
     data::Union(ASCIIString, Nothing)
 
-    UserDataType(; data=nothing) = 
+    UserDataType(; data=nothing) =
          new(data)
 end
 function UserDataType(pd::ETree)
@@ -286,7 +845,7 @@ export UserDataType
 type BlockDeviceMappingItemType
     deviceName::Union(ASCIIString, Nothing)
 
-    BlockDeviceMappingItemType(; deviceName=nothing) = 
+    BlockDeviceMappingItemType(; deviceName=nothing) =
          new(deviceName)
 end
 function BlockDeviceMappingItemType(pd::ETree)
@@ -305,7 +864,7 @@ type EbsBlockDeviceType
     volumeType::Union(ASCIIString, Nothing)
     iops::Union(Int64, Nothing)
 
-    EbsBlockDeviceType(; snapshotId=nothing, volumeSize=nothing, deleteOnTermination=nothing, volumeType=nothing, iops=nothing) = 
+    EbsBlockDeviceType(; snapshotId=nothing, volumeSize=nothing, deleteOnTermination=nothing, volumeType=nothing, iops=nothing) =
          new(snapshotId, volumeSize, deleteOnTermination, volumeType, iops)
 end
 function EbsBlockDeviceType(pd::ETree)
@@ -326,7 +885,7 @@ type PlacementRequestType
     groupName::Union(ASCIIString, Nothing)
     tenancy::Union(ASCIIString, Nothing)
 
-    PlacementRequestType(; availabilityZone=nothing, groupName=nothing, tenancy=nothing) = 
+    PlacementRequestType(; availabilityZone=nothing, groupName=nothing, tenancy=nothing) =
          new(availabilityZone, groupName, tenancy)
 end
 function PlacementRequestType(pd::ETree)
@@ -344,7 +903,7 @@ type SpotPlacementRequestType
     availabilityZone::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    SpotPlacementRequestType(; availabilityZone=nothing, groupName=nothing) = 
+    SpotPlacementRequestType(; availabilityZone=nothing, groupName=nothing) =
          new(availabilityZone, groupName)
 end
 function SpotPlacementRequestType(pd::ETree)
@@ -361,7 +920,7 @@ type InstancePlacementType
     availabilityZone::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    InstancePlacementType(; availabilityZone=nothing, groupName=nothing) = 
+    InstancePlacementType(; availabilityZone=nothing, groupName=nothing) =
          new(availabilityZone, groupName)
 end
 function InstancePlacementType(pd::ETree)
@@ -377,7 +936,7 @@ export InstancePlacementType
 type MonitoringInstanceType
     enabled::Union(Bool, Nothing)
 
-    MonitoringInstanceType(; enabled=nothing) = 
+    MonitoringInstanceType(; enabled=nothing) =
          new(enabled)
 end
 function MonitoringInstanceType(pd::ETree)
@@ -392,7 +951,7 @@ export MonitoringInstanceType
 type InstanceLicenseRequestType
     pool::Union(ASCIIString, Nothing)
 
-    InstanceLicenseRequestType(; pool=nothing) = 
+    InstanceLicenseRequestType(; pool=nothing) =
          new(pool)
 end
 function InstanceLicenseRequestType(pd::ETree)
@@ -408,7 +967,7 @@ type IamInstanceProfileResponseType
     arn::Union(ASCIIString, Nothing)
     id::Union(ASCIIString, Nothing)
 
-    IamInstanceProfileResponseType(; arn=nothing, id=nothing) = 
+    IamInstanceProfileResponseType(; arn=nothing, id=nothing) =
          new(arn, id)
 end
 function IamInstanceProfileResponseType(pd::ETree)
@@ -428,7 +987,7 @@ type InstanceNetworkInterfaceAttachmentType
     attachTime::Union(Base.Dates.DateTime, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    InstanceNetworkInterfaceAttachmentType(; attachmentId=nothing, deviceIndex=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) = 
+    InstanceNetworkInterfaceAttachmentType(; attachmentId=nothing, deviceIndex=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) =
          new(attachmentId, deviceIndex, status, attachTime, deleteOnTermination)
 end
 function InstanceNetworkInterfaceAttachmentType(pd::ETree)
@@ -449,7 +1008,7 @@ type InstanceNetworkInterfaceAssociationType
     publicDnsName::Union(ASCIIString, Nothing)
     ipOwnerId::Union(ASCIIString, Nothing)
 
-    InstanceNetworkInterfaceAssociationType(; publicIp=nothing, publicDnsName=nothing, ipOwnerId=nothing) = 
+    InstanceNetworkInterfaceAssociationType(; publicIp=nothing, publicDnsName=nothing, ipOwnerId=nothing) =
          new(publicIp, publicDnsName, ipOwnerId)
 end
 function InstanceNetworkInterfaceAssociationType(pd::ETree)
@@ -468,7 +1027,7 @@ type PlacementResponseType
     groupName::Union(ASCIIString, Nothing)
     tenancy::Union(ASCIIString, Nothing)
 
-    PlacementResponseType(; availabilityZone=nothing, groupName=nothing, tenancy=nothing) = 
+    PlacementResponseType(; availabilityZone=nothing, groupName=nothing, tenancy=nothing) =
          new(availabilityZone, groupName, tenancy)
 end
 function PlacementResponseType(pd::ETree)
@@ -486,7 +1045,7 @@ type StateReasonType
     code::Union(ASCIIString, Nothing)
     message::Union(ASCIIString, Nothing)
 
-    StateReasonType(; code=nothing, message=nothing) = 
+    StateReasonType(; code=nothing, message=nothing) =
          new(code, message)
 end
 function StateReasonType(pd::ETree)
@@ -502,7 +1061,7 @@ export StateReasonType
 type InstanceBlockDeviceMappingResponseItemType
     deviceName::Union(ASCIIString, Nothing)
 
-    InstanceBlockDeviceMappingResponseItemType(; deviceName=nothing) = 
+    InstanceBlockDeviceMappingResponseItemType(; deviceName=nothing) =
          new(deviceName)
 end
 function InstanceBlockDeviceMappingResponseItemType(pd::ETree)
@@ -520,7 +1079,7 @@ type EbsInstanceBlockDeviceMappingResponseType
     attachTime::Union(Base.Dates.DateTime, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    EbsInstanceBlockDeviceMappingResponseType(; volumeId=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) = 
+    EbsInstanceBlockDeviceMappingResponseType(; volumeId=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) =
          new(volumeId, status, attachTime, deleteOnTermination)
 end
 function EbsInstanceBlockDeviceMappingResponseType(pd::ETree)
@@ -538,7 +1097,7 @@ export EbsInstanceBlockDeviceMappingResponseType
 type InstanceLicenseResponseType
     pool::Union(ASCIIString, Nothing)
 
-    InstanceLicenseResponseType(; pool=nothing) = 
+    InstanceLicenseResponseType(; pool=nothing) =
          new(pool)
 end
 function InstanceLicenseResponseType(pd::ETree)
@@ -553,7 +1112,7 @@ export InstanceLicenseResponseType
 type AccountAttributeNameSetItemType
     attributeName::Union(ASCIIString, Nothing)
 
-    AccountAttributeNameSetItemType(; attributeName=nothing) = 
+    AccountAttributeNameSetItemType(; attributeName=nothing) =
          new(attributeName)
 end
 function AccountAttributeNameSetItemType(pd::ETree)
@@ -569,7 +1128,7 @@ type AccountAttributeSetItemType
     attributeName::Union(ASCIIString, Nothing)
     attributeValueSet::Union(Vector{ASCIIString}, Nothing)
 
-    AccountAttributeSetItemType(; attributeName=nothing, attributeValueSet=nothing) = 
+    AccountAttributeSetItemType(; attributeName=nothing, attributeValueSet=nothing) =
          new(attributeName, attributeValueSet)
 end
 function AccountAttributeSetItemType(pd::ETree)
@@ -585,7 +1144,7 @@ export AccountAttributeSetItemType
 type AccountAttributeValueSetItemType
     attributeValue::Union(ASCIIString, Nothing)
 
-    AccountAttributeValueSetItemType(; attributeValue=nothing) = 
+    AccountAttributeValueSetItemType(; attributeValue=nothing) =
          new(attributeValue)
 end
 function AccountAttributeValueSetItemType(pd::ETree)
@@ -600,7 +1159,7 @@ export AccountAttributeValueSetItemType
 type DescribeVpcAttributeType
     vpcId::Union(ASCIIString, Nothing)
 
-    DescribeVpcAttributeType(; vpcId=nothing) = 
+    DescribeVpcAttributeType(; vpcId=nothing) =
          new(vpcId)
 end
 function DescribeVpcAttributeType(pd::ETree)
@@ -616,7 +1175,7 @@ type DescribeVpcAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    DescribeVpcAttributeResponseType(; requestId=nothing, vpcId=nothing) = 
+    DescribeVpcAttributeResponseType(; requestId=nothing, vpcId=nothing) =
          new(requestId, vpcId)
 end
 function DescribeVpcAttributeResponseType(pd::ETree)
@@ -632,7 +1191,7 @@ export DescribeVpcAttributeResponseType
 type ModifyVpcAttributeType
     vpcId::Union(ASCIIString, Nothing)
 
-    ModifyVpcAttributeType(; vpcId=nothing) = 
+    ModifyVpcAttributeType(; vpcId=nothing) =
          new(vpcId)
 end
 function ModifyVpcAttributeType(pd::ETree)
@@ -648,7 +1207,7 @@ type ModifyVpcAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifyVpcAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifyVpcAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifyVpcAttributeResponseType(pd::ETree)
@@ -664,7 +1223,7 @@ export ModifyVpcAttributeResponseType
 type GetConsoleOutputType
     instanceId::Union(ASCIIString, Nothing)
 
-    GetConsoleOutputType(; instanceId=nothing) = 
+    GetConsoleOutputType(; instanceId=nothing) =
          new(instanceId)
 end
 function GetConsoleOutputType(pd::ETree)
@@ -682,7 +1241,7 @@ type GetConsoleOutputResponseType
     timestamp::Union(Base.Dates.DateTime, Nothing)
     output::Union(ASCIIString, Nothing)
 
-    GetConsoleOutputResponseType(; requestId=nothing, instanceId=nothing, timestamp=nothing, output=nothing) = 
+    GetConsoleOutputResponseType(; requestId=nothing, instanceId=nothing, timestamp=nothing, output=nothing) =
          new(requestId, instanceId, timestamp, output)
 end
 function GetConsoleOutputResponseType(pd::ETree)
@@ -700,7 +1259,7 @@ export GetConsoleOutputResponseType
 type GetPasswordDataType
     instanceId::Union(ASCIIString, Nothing)
 
-    GetPasswordDataType(; instanceId=nothing) = 
+    GetPasswordDataType(; instanceId=nothing) =
          new(instanceId)
 end
 function GetPasswordDataType(pd::ETree)
@@ -718,7 +1277,7 @@ type GetPasswordDataResponseType
     timestamp::Union(Base.Dates.DateTime, Nothing)
     passwordData::Union(ASCIIString, Nothing)
 
-    GetPasswordDataResponseType(; requestId=nothing, instanceId=nothing, timestamp=nothing, passwordData=nothing) = 
+    GetPasswordDataResponseType(; requestId=nothing, instanceId=nothing, timestamp=nothing, passwordData=nothing) =
          new(requestId, instanceId, timestamp, passwordData)
 end
 function GetPasswordDataResponseType(pd::ETree)
@@ -736,7 +1295,7 @@ export GetPasswordDataResponseType
 type InstanceIdType
     instanceId::Union(ASCIIString, Nothing)
 
-    InstanceIdType(; instanceId=nothing) = 
+    InstanceIdType(; instanceId=nothing) =
          new(instanceId)
 end
 function InstanceIdType(pd::ETree)
@@ -751,7 +1310,7 @@ export InstanceIdType
 type TerminateInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
 
-    TerminateInstancesType(; instancesSet=nothing) = 
+    TerminateInstancesType(; instancesSet=nothing) =
          new(instancesSet)
 end
 function TerminateInstancesType(pd::ETree)
@@ -766,7 +1325,7 @@ export TerminateInstancesType
 type InstanceBlockDeviceMappingItemType
     deviceName::Union(ASCIIString, Nothing)
 
-    InstanceBlockDeviceMappingItemType(; deviceName=nothing) = 
+    InstanceBlockDeviceMappingItemType(; deviceName=nothing) =
          new(deviceName)
 end
 function InstanceBlockDeviceMappingItemType(pd::ETree)
@@ -782,7 +1341,7 @@ type InstanceEbsBlockDeviceType
     volumeId::Union(ASCIIString, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    InstanceEbsBlockDeviceType(; volumeId=nothing, deleteOnTermination=nothing) = 
+    InstanceEbsBlockDeviceType(; volumeId=nothing, deleteOnTermination=nothing) =
          new(volumeId, deleteOnTermination)
 end
 function InstanceEbsBlockDeviceType(pd::ETree)
@@ -799,7 +1358,7 @@ type StopInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
     force::Union(Bool, Nothing)
 
-    StopInstancesType(; instancesSet=nothing, force=nothing) = 
+    StopInstancesType(; instancesSet=nothing, force=nothing) =
          new(instancesSet, force)
 end
 function StopInstancesType(pd::ETree)
@@ -815,7 +1374,7 @@ export StopInstancesType
 type StartInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
 
-    StartInstancesType(; instancesSet=nothing) = 
+    StartInstancesType(; instancesSet=nothing) =
          new(instancesSet)
 end
 function StartInstancesType(pd::ETree)
@@ -830,7 +1389,7 @@ export StartInstancesType
 type RebootInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
 
-    RebootInstancesType(; instancesSet=nothing) = 
+    RebootInstancesType(; instancesSet=nothing) =
          new(instancesSet)
 end
 function RebootInstancesType(pd::ETree)
@@ -845,7 +1404,7 @@ export RebootInstancesType
 type RebootInstancesItemType
     instanceId::Union(ASCIIString, Nothing)
 
-    RebootInstancesItemType(; instanceId=nothing) = 
+    RebootInstancesItemType(; instanceId=nothing) =
          new(instanceId)
 end
 function RebootInstancesItemType(pd::ETree)
@@ -861,7 +1420,7 @@ type RebootInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    RebootInstancesResponseType(; requestId=nothing, _return=nothing) = 
+    RebootInstancesResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function RebootInstancesResponseType(pd::ETree)
@@ -877,7 +1436,7 @@ export RebootInstancesResponseType
 type DescribeInstancesItemType
     instanceId::Union(ASCIIString, Nothing)
 
-    DescribeInstancesItemType(; instanceId=nothing) = 
+    DescribeInstancesItemType(; instanceId=nothing) =
          new(instanceId)
 end
 function DescribeInstancesItemType(pd::ETree)
@@ -892,7 +1451,7 @@ export DescribeInstancesItemType
 type UnavailableResultType
     availabilityZone::Union(ASCIIString, Nothing)
 
-    UnavailableResultType(; availabilityZone=nothing) = 
+    UnavailableResultType(; availabilityZone=nothing) =
          new(availabilityZone)
 end
 function UnavailableResultType(pd::ETree)
@@ -907,7 +1466,7 @@ export UnavailableResultType
 type DescribeImagesItemType
     imageId::Union(ASCIIString, Nothing)
 
-    DescribeImagesItemType(; imageId=nothing) = 
+    DescribeImagesItemType(; imageId=nothing) =
          new(imageId)
 end
 function DescribeImagesItemType(pd::ETree)
@@ -922,7 +1481,7 @@ export DescribeImagesItemType
 type DescribeImagesOwnerType
     owner::Union(ASCIIString, Nothing)
 
-    DescribeImagesOwnerType(; owner=nothing) = 
+    DescribeImagesOwnerType(; owner=nothing) =
          new(owner)
 end
 function DescribeImagesOwnerType(pd::ETree)
@@ -937,7 +1496,7 @@ export DescribeImagesOwnerType
 type DescribeImagesExecutableByType
     user::Union(ASCIIString, Nothing)
 
-    DescribeImagesExecutableByType(; user=nothing) = 
+    DescribeImagesExecutableByType(; user=nothing) =
          new(user)
 end
 function DescribeImagesExecutableByType(pd::ETree)
@@ -954,7 +1513,7 @@ type CreateSecurityGroupType
     groupDescription::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    CreateSecurityGroupType(; groupName=nothing, groupDescription=nothing, vpcId=nothing) = 
+    CreateSecurityGroupType(; groupName=nothing, groupDescription=nothing, vpcId=nothing) =
          new(groupName, groupDescription, vpcId)
 end
 function CreateSecurityGroupType(pd::ETree)
@@ -973,7 +1532,7 @@ type CreateSecurityGroupResponseType
     _return::Union(Bool, Nothing)
     groupId::Union(ASCIIString, Nothing)
 
-    CreateSecurityGroupResponseType(; requestId=nothing, _return=nothing, groupId=nothing) = 
+    CreateSecurityGroupResponseType(; requestId=nothing, _return=nothing, groupId=nothing) =
          new(requestId, _return, groupId)
 end
 function CreateSecurityGroupResponseType(pd::ETree)
@@ -991,7 +1550,7 @@ type DeleteSecurityGroupType
     groupId::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    DeleteSecurityGroupType(; groupId=nothing, groupName=nothing) = 
+    DeleteSecurityGroupType(; groupId=nothing, groupName=nothing) =
          new(groupId, groupName)
 end
 function DeleteSecurityGroupType(pd::ETree)
@@ -1008,7 +1567,7 @@ type DeleteSecurityGroupResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteSecurityGroupResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteSecurityGroupResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteSecurityGroupResponseType(pd::ETree)
@@ -1024,7 +1583,7 @@ export DeleteSecurityGroupResponseType
 type DescribeSecurityGroupsSetItemType
     groupName::Union(ASCIIString, Nothing)
 
-    DescribeSecurityGroupsSetItemType(; groupName=nothing) = 
+    DescribeSecurityGroupsSetItemType(; groupName=nothing) =
          new(groupName)
 end
 function DescribeSecurityGroupsSetItemType(pd::ETree)
@@ -1039,7 +1598,7 @@ export DescribeSecurityGroupsSetItemType
 type DescribeSecurityGroupsIdSetItemType
     groupId::Union(ASCIIString, Nothing)
 
-    DescribeSecurityGroupsIdSetItemType(; groupId=nothing) = 
+    DescribeSecurityGroupsIdSetItemType(; groupId=nothing) =
          new(groupId)
 end
 function DescribeSecurityGroupsIdSetItemType(pd::ETree)
@@ -1054,7 +1613,7 @@ export DescribeSecurityGroupsIdSetItemType
 type IpRangeItemType
     cidrIp::Union(ASCIIString, Nothing)
 
-    IpRangeItemType(; cidrIp=nothing) = 
+    IpRangeItemType(; cidrIp=nothing) =
          new(cidrIp)
 end
 function IpRangeItemType(pd::ETree)
@@ -1071,7 +1630,7 @@ type UserIdGroupPairType
     groupId::Union(ASCIIString, Nothing)
     groupName::Union(ASCIIString, Nothing)
 
-    UserIdGroupPairType(; userId=nothing, groupId=nothing, groupName=nothing) = 
+    UserIdGroupPairType(; userId=nothing, groupId=nothing, groupName=nothing) =
          new(userId, groupId, groupName)
 end
 function UserIdGroupPairType(pd::ETree)
@@ -1089,7 +1648,7 @@ type AuthorizeSecurityGroupIngressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    AuthorizeSecurityGroupIngressResponseType(; requestId=nothing, _return=nothing) = 
+    AuthorizeSecurityGroupIngressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function AuthorizeSecurityGroupIngressResponseType(pd::ETree)
@@ -1106,7 +1665,7 @@ type RevokeSecurityGroupIngressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    RevokeSecurityGroupIngressResponseType(; requestId=nothing, _return=nothing) = 
+    RevokeSecurityGroupIngressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function RevokeSecurityGroupIngressResponseType(pd::ETree)
@@ -1123,7 +1682,7 @@ type AuthorizeSecurityGroupEgressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    AuthorizeSecurityGroupEgressResponseType(; requestId=nothing, _return=nothing) = 
+    AuthorizeSecurityGroupEgressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function AuthorizeSecurityGroupEgressResponseType(pd::ETree)
@@ -1140,7 +1699,7 @@ type RevokeSecurityGroupEgressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    RevokeSecurityGroupEgressResponseType(; requestId=nothing, _return=nothing) = 
+    RevokeSecurityGroupEgressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function RevokeSecurityGroupEgressResponseType(pd::ETree)
@@ -1157,7 +1716,7 @@ type InstanceStateType
     code::Union(Int64, Nothing)
     name::Union(ASCIIString, Nothing)
 
-    InstanceStateType(; code=nothing, name=nothing) = 
+    InstanceStateType(; code=nothing, name=nothing) =
          new(code, name)
 end
 function InstanceStateType(pd::ETree)
@@ -1173,7 +1732,7 @@ export InstanceStateType
 type ModifyInstanceAttributeType
     instanceId::Union(ASCIIString, Nothing)
 
-    ModifyInstanceAttributeType(; instanceId=nothing) = 
+    ModifyInstanceAttributeType(; instanceId=nothing) =
          new(instanceId)
 end
 function ModifyInstanceAttributeType(pd::ETree)
@@ -1188,7 +1747,7 @@ export ModifyInstanceAttributeType
 type SecurityGroupIdSetItemType
     groupId::Union(ASCIIString, Nothing)
 
-    SecurityGroupIdSetItemType(; groupId=nothing) = 
+    SecurityGroupIdSetItemType(; groupId=nothing) =
          new(groupId)
 end
 function SecurityGroupIdSetItemType(pd::ETree)
@@ -1204,7 +1763,7 @@ type ModifyInstanceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifyInstanceAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifyInstanceAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifyInstanceAttributeResponseType(pd::ETree)
@@ -1220,7 +1779,7 @@ export ModifyInstanceAttributeResponseType
 type ResetInstanceAttributeType
     instanceId::Union(ASCIIString, Nothing)
 
-    ResetInstanceAttributeType(; instanceId=nothing) = 
+    ResetInstanceAttributeType(; instanceId=nothing) =
          new(instanceId)
 end
 function ResetInstanceAttributeType(pd::ETree)
@@ -1236,7 +1795,7 @@ type ResetInstanceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ResetInstanceAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ResetInstanceAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ResetInstanceAttributeResponseType(pd::ETree)
@@ -1252,7 +1811,7 @@ export ResetInstanceAttributeResponseType
 type DescribeInstanceAttributeType
     instanceId::Union(ASCIIString, Nothing)
 
-    DescribeInstanceAttributeType(; instanceId=nothing) = 
+    DescribeInstanceAttributeType(; instanceId=nothing) =
          new(instanceId)
 end
 function DescribeInstanceAttributeType(pd::ETree)
@@ -1268,7 +1827,7 @@ type DescribeInstanceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     instanceId::Union(ASCIIString, Nothing)
 
-    DescribeInstanceAttributeResponseType(; requestId=nothing, instanceId=nothing) = 
+    DescribeInstanceAttributeResponseType(; requestId=nothing, instanceId=nothing) =
          new(requestId, instanceId)
 end
 function DescribeInstanceAttributeResponseType(pd::ETree)
@@ -1284,7 +1843,7 @@ export DescribeInstanceAttributeResponseType
 type ModifyImageAttributeType
     imageId::Union(ASCIIString, Nothing)
 
-    ModifyImageAttributeType(; imageId=nothing) = 
+    ModifyImageAttributeType(; imageId=nothing) =
          new(imageId)
 end
 function ModifyImageAttributeType(pd::ETree)
@@ -1300,7 +1859,7 @@ type LaunchPermissionItemType
     userId::Union(ASCIIString, Nothing)
     group::Union(ASCIIString, Nothing)
 
-    LaunchPermissionItemType(; userId=nothing, group=nothing) = 
+    LaunchPermissionItemType(; userId=nothing, group=nothing) =
          new(userId, group)
 end
 function LaunchPermissionItemType(pd::ETree)
@@ -1316,7 +1875,7 @@ export LaunchPermissionItemType
 type ProductCodeItemType
     productCode::Union(ASCIIString, Nothing)
 
-    ProductCodeItemType(; productCode=nothing) = 
+    ProductCodeItemType(; productCode=nothing) =
          new(productCode)
 end
 function ProductCodeItemType(pd::ETree)
@@ -1332,7 +1891,7 @@ type ModifyImageAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifyImageAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifyImageAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifyImageAttributeResponseType(pd::ETree)
@@ -1348,7 +1907,7 @@ export ModifyImageAttributeResponseType
 type ResetImageAttributeType
     imageId::Union(ASCIIString, Nothing)
 
-    ResetImageAttributeType(; imageId=nothing) = 
+    ResetImageAttributeType(; imageId=nothing) =
          new(imageId)
 end
 function ResetImageAttributeType(pd::ETree)
@@ -1364,7 +1923,7 @@ type ResetImageAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ResetImageAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ResetImageAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ResetImageAttributeResponseType(pd::ETree)
@@ -1380,7 +1939,7 @@ export ResetImageAttributeResponseType
 type DescribeImageAttributeType
     imageId::Union(ASCIIString, Nothing)
 
-    DescribeImageAttributeType(; imageId=nothing) = 
+    DescribeImageAttributeType(; imageId=nothing) =
          new(imageId)
 end
 function DescribeImageAttributeType(pd::ETree)
@@ -1396,7 +1955,7 @@ type DescribeImageAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     imageId::Union(ASCIIString, Nothing)
 
-    DescribeImageAttributeResponseType(; requestId=nothing, imageId=nothing) = 
+    DescribeImageAttributeResponseType(; requestId=nothing, imageId=nothing) =
          new(requestId, imageId)
 end
 function DescribeImageAttributeResponseType(pd::ETree)
@@ -1412,7 +1971,7 @@ export DescribeImageAttributeResponseType
 type NullableAttributeValueType
     value::Union(ASCIIString, Nothing)
 
-    NullableAttributeValueType(; value=nothing) = 
+    NullableAttributeValueType(; value=nothing) =
          new(value)
 end
 function NullableAttributeValueType(pd::ETree)
@@ -1427,7 +1986,7 @@ export NullableAttributeValueType
 type NullableAttributeBooleanValueType
     value::Union(Bool, Nothing)
 
-    NullableAttributeBooleanValueType(; value=nothing) = 
+    NullableAttributeBooleanValueType(; value=nothing) =
          new(value)
 end
 function NullableAttributeBooleanValueType(pd::ETree)
@@ -1442,7 +2001,7 @@ export NullableAttributeBooleanValueType
 type AttributeValueType
     value::Union(ASCIIString, Nothing)
 
-    AttributeValueType(; value=nothing) = 
+    AttributeValueType(; value=nothing) =
          new(value)
 end
 function AttributeValueType(pd::ETree)
@@ -1457,7 +2016,7 @@ export AttributeValueType
 type AttributeBooleanValueType
     value::Union(Bool, Nothing)
 
-    AttributeBooleanValueType(; value=nothing) = 
+    AttributeBooleanValueType(; value=nothing) =
          new(value)
 end
 function AttributeBooleanValueType(pd::ETree)
@@ -1473,7 +2032,7 @@ type ConfirmProductInstanceType
     productCode::Union(ASCIIString, Nothing)
     instanceId::Union(ASCIIString, Nothing)
 
-    ConfirmProductInstanceType(; productCode=nothing, instanceId=nothing) = 
+    ConfirmProductInstanceType(; productCode=nothing, instanceId=nothing) =
          new(productCode, instanceId)
 end
 function ConfirmProductInstanceType(pd::ETree)
@@ -1490,7 +2049,7 @@ type ProductCodesSetItemType
     productCode::Union(ASCIIString, Nothing)
     _type::Union(ASCIIString, Nothing)
 
-    ProductCodesSetItemType(; productCode=nothing, _type=nothing) = 
+    ProductCodesSetItemType(; productCode=nothing, _type=nothing) =
          new(productCode, _type)
 end
 function ProductCodesSetItemType(pd::ETree)
@@ -1508,7 +2067,7 @@ type ConfirmProductInstanceResponseType
     _return::Union(Bool, Nothing)
     ownerId::Union(ASCIIString, Nothing)
 
-    ConfirmProductInstanceResponseType(; requestId=nothing, _return=nothing, ownerId=nothing) = 
+    ConfirmProductInstanceResponseType(; requestId=nothing, _return=nothing, ownerId=nothing) =
          new(requestId, _return, ownerId)
 end
 function ConfirmProductInstanceResponseType(pd::ETree)
@@ -1525,7 +2084,7 @@ export ConfirmProductInstanceResponseType
 type DescribeAvailabilityZonesSetItemType
     zoneName::Union(ASCIIString, Nothing)
 
-    DescribeAvailabilityZonesSetItemType(; zoneName=nothing) = 
+    DescribeAvailabilityZonesSetItemType(; zoneName=nothing) =
          new(zoneName)
 end
 function DescribeAvailabilityZonesSetItemType(pd::ETree)
@@ -1540,7 +2099,7 @@ export DescribeAvailabilityZonesSetItemType
 type AvailabilityZoneMessageType
     message::Union(ASCIIString, Nothing)
 
-    AvailabilityZoneMessageType(; message=nothing) = 
+    AvailabilityZoneMessageType(; message=nothing) =
          new(message)
 end
 function AvailabilityZoneMessageType(pd::ETree)
@@ -1558,7 +2117,7 @@ type AvailabilityZoneItemType
     regionName::Union(ASCIIString, Nothing)
     messageSet::Union(Vector{ASCIIString}, Nothing)
 
-    AvailabilityZoneItemType(; zoneName=nothing, zoneState=nothing, regionName=nothing, messageSet=nothing) = 
+    AvailabilityZoneItemType(; zoneName=nothing, zoneState=nothing, regionName=nothing, messageSet=nothing) =
          new(zoneName, zoneState, regionName, messageSet)
 end
 function AvailabilityZoneItemType(pd::ETree)
@@ -1576,7 +2135,7 @@ export AvailabilityZoneItemType
 type AllocateAddressType
     domain::Union(ASCIIString, Nothing)
 
-    AllocateAddressType(; domain=nothing) = 
+    AllocateAddressType(; domain=nothing) =
          new(domain)
 end
 function AllocateAddressType(pd::ETree)
@@ -1594,7 +2153,7 @@ type AllocateAddressResponseType
     domain::Union(ASCIIString, Nothing)
     allocationId::Union(ASCIIString, Nothing)
 
-    AllocateAddressResponseType(; requestId=nothing, publicIp=nothing, domain=nothing, allocationId=nothing) = 
+    AllocateAddressResponseType(; requestId=nothing, publicIp=nothing, domain=nothing, allocationId=nothing) =
          new(requestId, publicIp, domain, allocationId)
 end
 function AllocateAddressResponseType(pd::ETree)
@@ -1613,7 +2172,7 @@ type ReleaseAddressType
     publicIp::Union(ASCIIString, Nothing)
     allocationId::Union(ASCIIString, Nothing)
 
-    ReleaseAddressType(; publicIp=nothing, allocationId=nothing) = 
+    ReleaseAddressType(; publicIp=nothing, allocationId=nothing) =
          new(publicIp, allocationId)
 end
 function ReleaseAddressType(pd::ETree)
@@ -1630,7 +2189,7 @@ type ReleaseAddressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ReleaseAddressResponseType(; requestId=nothing, _return=nothing) = 
+    ReleaseAddressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ReleaseAddressResponseType(pd::ETree)
@@ -1646,7 +2205,7 @@ export ReleaseAddressResponseType
 type AllocationIdSetItemType
     allocationId::Union(ASCIIString, Nothing)
 
-    AllocationIdSetItemType(; allocationId=nothing) = 
+    AllocationIdSetItemType(; allocationId=nothing) =
          new(allocationId)
 end
 function AllocationIdSetItemType(pd::ETree)
@@ -1661,7 +2220,7 @@ export AllocationIdSetItemType
 type DescribeAddressesItemType
     publicIp::Union(ASCIIString, Nothing)
 
-    DescribeAddressesItemType(; publicIp=nothing) = 
+    DescribeAddressesItemType(; publicIp=nothing) =
          new(publicIp)
 end
 function DescribeAddressesItemType(pd::ETree)
@@ -1683,7 +2242,7 @@ type DescribeAddressesResponseItemType
     networkInterfaceOwnerId::Union(ASCIIString, Nothing)
     privateIpAddress::Union(ASCIIString, Nothing)
 
-    DescribeAddressesResponseItemType(; publicIp=nothing, allocationId=nothing, domain=nothing, instanceId=nothing, associationId=nothing, networkInterfaceId=nothing, networkInterfaceOwnerId=nothing, privateIpAddress=nothing) = 
+    DescribeAddressesResponseItemType(; publicIp=nothing, allocationId=nothing, domain=nothing, instanceId=nothing, associationId=nothing, networkInterfaceId=nothing, networkInterfaceOwnerId=nothing, privateIpAddress=nothing) =
          new(publicIp, allocationId, domain, instanceId, associationId, networkInterfaceId, networkInterfaceOwnerId, privateIpAddress)
 end
 function DescribeAddressesResponseItemType(pd::ETree)
@@ -1706,7 +2265,7 @@ type AssociateAddressType
     privateIpAddress::Union(ASCIIString, Nothing)
     allowReassociation::Union(Bool, Nothing)
 
-    AssociateAddressType(; privateIpAddress=nothing, allowReassociation=nothing) = 
+    AssociateAddressType(; privateIpAddress=nothing, allowReassociation=nothing) =
          new(privateIpAddress, allowReassociation)
 end
 function AssociateAddressType(pd::ETree)
@@ -1724,7 +2283,7 @@ type AssociateAddressResponseType
     _return::Union(Bool, Nothing)
     associationId::Union(ASCIIString, Nothing)
 
-    AssociateAddressResponseType(; requestId=nothing, _return=nothing, associationId=nothing) = 
+    AssociateAddressResponseType(; requestId=nothing, _return=nothing, associationId=nothing) =
          new(requestId, _return, associationId)
 end
 function AssociateAddressResponseType(pd::ETree)
@@ -1742,7 +2301,7 @@ type DisassociateAddressType
     publicIp::Union(ASCIIString, Nothing)
     associationId::Union(ASCIIString, Nothing)
 
-    DisassociateAddressType(; publicIp=nothing, associationId=nothing) = 
+    DisassociateAddressType(; publicIp=nothing, associationId=nothing) =
          new(publicIp, associationId)
 end
 function DisassociateAddressType(pd::ETree)
@@ -1759,7 +2318,7 @@ type DisassociateAddressResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DisassociateAddressResponseType(; requestId=nothing, _return=nothing) = 
+    DisassociateAddressResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DisassociateAddressResponseType(pd::ETree)
@@ -1779,7 +2338,7 @@ type CreateVolumeType
     volumeType::Union(ASCIIString, Nothing)
     iops::Union(Int64, Nothing)
 
-    CreateVolumeType(; size=nothing, snapshotId=nothing, availabilityZone=nothing, volumeType=nothing, iops=nothing) = 
+    CreateVolumeType(; size=nothing, snapshotId=nothing, availabilityZone=nothing, volumeType=nothing, iops=nothing) =
          new(size, snapshotId, availabilityZone, volumeType, iops)
 end
 function CreateVolumeType(pd::ETree)
@@ -1806,7 +2365,7 @@ type CreateVolumeResponseType
     volumeType::Union(ASCIIString, Nothing)
     iops::Union(Int64, Nothing)
 
-    CreateVolumeResponseType(; requestId=nothing, volumeId=nothing, size=nothing, snapshotId=nothing, availabilityZone=nothing, status=nothing, createTime=nothing, volumeType=nothing, iops=nothing) = 
+    CreateVolumeResponseType(; requestId=nothing, volumeId=nothing, size=nothing, snapshotId=nothing, availabilityZone=nothing, status=nothing, createTime=nothing, volumeType=nothing, iops=nothing) =
          new(requestId, volumeId, size, snapshotId, availabilityZone, status, createTime, volumeType, iops)
 end
 function CreateVolumeResponseType(pd::ETree)
@@ -1829,7 +2388,7 @@ export CreateVolumeResponseType
 type DeleteVolumeType
     volumeId::Union(ASCIIString, Nothing)
 
-    DeleteVolumeType(; volumeId=nothing) = 
+    DeleteVolumeType(; volumeId=nothing) =
          new(volumeId)
 end
 function DeleteVolumeType(pd::ETree)
@@ -1845,7 +2404,7 @@ type DeleteVolumeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteVolumeResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteVolumeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteVolumeResponseType(pd::ETree)
@@ -1861,7 +2420,7 @@ export DeleteVolumeResponseType
 type DescribeVolumesSetItemType
     volumeId::Union(ASCIIString, Nothing)
 
-    DescribeVolumesSetItemType(; volumeId=nothing) = 
+    DescribeVolumesSetItemType(; volumeId=nothing) =
          new(volumeId)
 end
 function DescribeVolumesSetItemType(pd::ETree)
@@ -1881,7 +2440,7 @@ type AttachmentSetItemResponseType
     attachTime::Union(Base.Dates.DateTime, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    AttachmentSetItemResponseType(; volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) = 
+    AttachmentSetItemResponseType(; volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) =
          new(volumeId, instanceId, device, status, attachTime, deleteOnTermination)
 end
 function AttachmentSetItemResponseType(pd::ETree)
@@ -1903,7 +2462,7 @@ type AttachVolumeType
     instanceId::Union(ASCIIString, Nothing)
     device::Union(ASCIIString, Nothing)
 
-    AttachVolumeType(; volumeId=nothing, instanceId=nothing, device=nothing) = 
+    AttachVolumeType(; volumeId=nothing, instanceId=nothing, device=nothing) =
          new(volumeId, instanceId, device)
 end
 function AttachVolumeType(pd::ETree)
@@ -1925,7 +2484,7 @@ type AttachVolumeResponseType
     status::Union(ASCIIString, Nothing)
     attachTime::Union(Base.Dates.DateTime, Nothing)
 
-    AttachVolumeResponseType(; requestId=nothing, volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing) = 
+    AttachVolumeResponseType(; requestId=nothing, volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing) =
          new(requestId, volumeId, instanceId, device, status, attachTime)
 end
 function AttachVolumeResponseType(pd::ETree)
@@ -1948,7 +2507,7 @@ type DetachVolumeType
     device::Union(ASCIIString, Nothing)
     force::Union(Bool, Nothing)
 
-    DetachVolumeType(; volumeId=nothing, instanceId=nothing, device=nothing, force=nothing) = 
+    DetachVolumeType(; volumeId=nothing, instanceId=nothing, device=nothing, force=nothing) =
          new(volumeId, instanceId, device, force)
 end
 function DetachVolumeType(pd::ETree)
@@ -1971,7 +2530,7 @@ type DetachVolumeResponseType
     status::Union(ASCIIString, Nothing)
     attachTime::Union(Base.Dates.DateTime, Nothing)
 
-    DetachVolumeResponseType(; requestId=nothing, volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing) = 
+    DetachVolumeResponseType(; requestId=nothing, volumeId=nothing, instanceId=nothing, device=nothing, status=nothing, attachTime=nothing) =
          new(requestId, volumeId, instanceId, device, status, attachTime)
 end
 function DetachVolumeResponseType(pd::ETree)
@@ -1992,7 +2551,7 @@ type CreateSnapshotType
     volumeId::Union(ASCIIString, Nothing)
     description::Union(ASCIIString, Nothing)
 
-    CreateSnapshotType(; volumeId=nothing, description=nothing) = 
+    CreateSnapshotType(; volumeId=nothing, description=nothing) =
          new(volumeId, description)
 end
 function CreateSnapshotType(pd::ETree)
@@ -2016,7 +2575,7 @@ type CreateSnapshotResponseType
     volumeSize::Union(ASCIIString, Nothing)
     description::Union(ASCIIString, Nothing)
 
-    CreateSnapshotResponseType(; requestId=nothing, snapshotId=nothing, volumeId=nothing, status=nothing, startTime=nothing, progress=nothing, ownerId=nothing, volumeSize=nothing, description=nothing) = 
+    CreateSnapshotResponseType(; requestId=nothing, snapshotId=nothing, volumeId=nothing, status=nothing, startTime=nothing, progress=nothing, ownerId=nothing, volumeSize=nothing, description=nothing) =
          new(requestId, snapshotId, volumeId, status, startTime, progress, ownerId, volumeSize, description)
 end
 function CreateSnapshotResponseType(pd::ETree)
@@ -2041,7 +2600,7 @@ type CopySnapshotType
     sourceSnapshotId::Union(ASCIIString, Nothing)
     description::Union(ASCIIString, Nothing)
 
-    CopySnapshotType(; sourceRegion=nothing, sourceSnapshotId=nothing, description=nothing) = 
+    CopySnapshotType(; sourceRegion=nothing, sourceSnapshotId=nothing, description=nothing) =
          new(sourceRegion, sourceSnapshotId, description)
 end
 function CopySnapshotType(pd::ETree)
@@ -2059,7 +2618,7 @@ type CopySnapshotResponseType
     requestId::Union(ASCIIString, Nothing)
     snapshotId::Union(ASCIIString, Nothing)
 
-    CopySnapshotResponseType(; requestId=nothing, snapshotId=nothing) = 
+    CopySnapshotResponseType(; requestId=nothing, snapshotId=nothing) =
          new(requestId, snapshotId)
 end
 function CopySnapshotResponseType(pd::ETree)
@@ -2075,7 +2634,7 @@ export CopySnapshotResponseType
 type DeleteSnapshotType
     snapshotId::Union(ASCIIString, Nothing)
 
-    DeleteSnapshotType(; snapshotId=nothing) = 
+    DeleteSnapshotType(; snapshotId=nothing) =
          new(snapshotId)
 end
 function DeleteSnapshotType(pd::ETree)
@@ -2091,7 +2650,7 @@ type DeleteSnapshotResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteSnapshotResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteSnapshotResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteSnapshotResponseType(pd::ETree)
@@ -2107,7 +2666,7 @@ export DeleteSnapshotResponseType
 type DescribeSnapshotsSetItemType
     snapshotId::Union(ASCIIString, Nothing)
 
-    DescribeSnapshotsSetItemType(; snapshotId=nothing) = 
+    DescribeSnapshotsSetItemType(; snapshotId=nothing) =
          new(snapshotId)
 end
 function DescribeSnapshotsSetItemType(pd::ETree)
@@ -2122,7 +2681,7 @@ export DescribeSnapshotsSetItemType
 type DescribeSnapshotsOwnerType
     owner::Union(ASCIIString, Nothing)
 
-    DescribeSnapshotsOwnerType(; owner=nothing) = 
+    DescribeSnapshotsOwnerType(; owner=nothing) =
          new(owner)
 end
 function DescribeSnapshotsOwnerType(pd::ETree)
@@ -2137,7 +2696,7 @@ export DescribeSnapshotsOwnerType
 type DescribeSnapshotsRestorableByType
     user::Union(ASCIIString, Nothing)
 
-    DescribeSnapshotsRestorableByType(; user=nothing) = 
+    DescribeSnapshotsRestorableByType(; user=nothing) =
          new(user)
 end
 function DescribeSnapshotsRestorableByType(pd::ETree)
@@ -2153,7 +2712,7 @@ type CreateVolumePermissionItemType
     userId::Union(ASCIIString, Nothing)
     group::Union(ASCIIString, Nothing)
 
-    CreateVolumePermissionItemType(; userId=nothing, group=nothing) = 
+    CreateVolumePermissionItemType(; userId=nothing, group=nothing) =
          new(userId, group)
 end
 function CreateVolumePermissionItemType(pd::ETree)
@@ -2170,7 +2729,7 @@ type ModifySnapshotAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifySnapshotAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifySnapshotAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifySnapshotAttributeResponseType(pd::ETree)
@@ -2186,7 +2745,7 @@ export ModifySnapshotAttributeResponseType
 type ResetSnapshotAttributeType
     snapshotId::Union(ASCIIString, Nothing)
 
-    ResetSnapshotAttributeType(; snapshotId=nothing) = 
+    ResetSnapshotAttributeType(; snapshotId=nothing) =
          new(snapshotId)
 end
 function ResetSnapshotAttributeType(pd::ETree)
@@ -2202,7 +2761,7 @@ type ResetSnapshotAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ResetSnapshotAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ResetSnapshotAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ResetSnapshotAttributeResponseType(pd::ETree)
@@ -2218,7 +2777,7 @@ export ResetSnapshotAttributeResponseType
 type DescribeSnapshotAttributeType
     snapshotId::Union(ASCIIString, Nothing)
 
-    DescribeSnapshotAttributeType(; snapshotId=nothing) = 
+    DescribeSnapshotAttributeType(; snapshotId=nothing) =
          new(snapshotId)
 end
 function DescribeSnapshotAttributeType(pd::ETree)
@@ -2234,7 +2793,7 @@ type DescribeSnapshotAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     snapshotId::Union(ASCIIString, Nothing)
 
-    DescribeSnapshotAttributeResponseType(; requestId=nothing, snapshotId=nothing) = 
+    DescribeSnapshotAttributeResponseType(; requestId=nothing, snapshotId=nothing) =
          new(requestId, snapshotId)
 end
 function DescribeSnapshotAttributeResponseType(pd::ETree)
@@ -2254,7 +2813,7 @@ type BundleInstanceS3StorageType
     uploadPolicy::Union(ASCIIString, Nothing)
     uploadPolicySignature::Union(ASCIIString, Nothing)
 
-    BundleInstanceS3StorageType(; bucket=nothing, prefix=nothing, awsAccessKeyId=nothing, uploadPolicy=nothing, uploadPolicySignature=nothing) = 
+    BundleInstanceS3StorageType(; bucket=nothing, prefix=nothing, awsAccessKeyId=nothing, uploadPolicy=nothing, uploadPolicySignature=nothing) =
          new(bucket, prefix, awsAccessKeyId, uploadPolicy, uploadPolicySignature)
 end
 function BundleInstanceS3StorageType(pd::ETree)
@@ -2274,7 +2833,7 @@ type BundleInstanceTaskErrorType
     code::Union(ASCIIString, Nothing)
     message::Union(ASCIIString, Nothing)
 
-    BundleInstanceTaskErrorType(; code=nothing, message=nothing) = 
+    BundleInstanceTaskErrorType(; code=nothing, message=nothing) =
          new(code, message)
 end
 function BundleInstanceTaskErrorType(pd::ETree)
@@ -2290,7 +2849,7 @@ export BundleInstanceTaskErrorType
 type DescribeBundleTasksItemType
     bundleId::Union(ASCIIString, Nothing)
 
-    DescribeBundleTasksItemType(; bundleId=nothing) = 
+    DescribeBundleTasksItemType(; bundleId=nothing) =
          new(bundleId)
 end
 function DescribeBundleTasksItemType(pd::ETree)
@@ -2305,7 +2864,7 @@ export DescribeBundleTasksItemType
 type CancelBundleTaskType
     bundleId::Union(ASCIIString, Nothing)
 
-    CancelBundleTaskType(; bundleId=nothing) = 
+    CancelBundleTaskType(; bundleId=nothing) =
          new(bundleId)
 end
 function CancelBundleTaskType(pd::ETree)
@@ -2324,7 +2883,7 @@ type CopyImageType
     description::Union(ASCIIString, Nothing)
     clientToken::Union(ASCIIString, Nothing)
 
-    CopyImageType(; sourceRegion=nothing, sourceImageId=nothing, name=nothing, description=nothing, clientToken=nothing) = 
+    CopyImageType(; sourceRegion=nothing, sourceImageId=nothing, name=nothing, description=nothing, clientToken=nothing) =
          new(sourceRegion, sourceImageId, name, description, clientToken)
 end
 function CopyImageType(pd::ETree)
@@ -2344,7 +2903,7 @@ type CopyImageResponseType
     requestId::Union(ASCIIString, Nothing)
     imageId::Union(ASCIIString, Nothing)
 
-    CopyImageResponseType(; requestId=nothing, imageId=nothing) = 
+    CopyImageResponseType(; requestId=nothing, imageId=nothing) =
          new(requestId, imageId)
 end
 function CopyImageResponseType(pd::ETree)
@@ -2360,7 +2919,7 @@ export CopyImageResponseType
 type DescribeRegionsSetItemType
     regionName::Union(ASCIIString, Nothing)
 
-    DescribeRegionsSetItemType(; regionName=nothing) = 
+    DescribeRegionsSetItemType(; regionName=nothing) =
          new(regionName)
 end
 function DescribeRegionsSetItemType(pd::ETree)
@@ -2376,7 +2935,7 @@ type RegionItemType
     regionName::Union(ASCIIString, Nothing)
     regionEndpoint::Union(ASCIIString, Nothing)
 
-    RegionItemType(; regionName=nothing, regionEndpoint=nothing) = 
+    RegionItemType(; regionName=nothing, regionEndpoint=nothing) =
          new(regionName, regionEndpoint)
 end
 function RegionItemType(pd::ETree)
@@ -2392,7 +2951,7 @@ export RegionItemType
 type DescribeReservedInstancesOfferingsSetItemType
     reservedInstancesOfferingId::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesOfferingsSetItemType(; reservedInstancesOfferingId=nothing) = 
+    DescribeReservedInstancesOfferingsSetItemType(; reservedInstancesOfferingId=nothing) =
          new(reservedInstancesOfferingId)
 end
 function DescribeReservedInstancesOfferingsSetItemType(pd::ETree)
@@ -2408,7 +2967,7 @@ type RecurringChargesSetItemType
     frequency::Union(ASCIIString, Nothing)
     amount::Union(Float64, Nothing)
 
-    RecurringChargesSetItemType(; frequency=nothing, amount=nothing) = 
+    RecurringChargesSetItemType(; frequency=nothing, amount=nothing) =
          new(frequency, amount)
 end
 function RecurringChargesSetItemType(pd::ETree)
@@ -2425,7 +2984,7 @@ type PricingDetailsSetItemType
     price::Union(Float64, Nothing)
     count::Union(Int64, Nothing)
 
-    PricingDetailsSetItemType(; price=nothing, count=nothing) = 
+    PricingDetailsSetItemType(; price=nothing, count=nothing) =
          new(price, count)
 end
 function PricingDetailsSetItemType(pd::ETree)
@@ -2442,7 +3001,7 @@ type ReservedInstanceLimitPriceType
     amount::Union(Float64, Nothing)
     currencyCode::Union(ASCIIString, Nothing)
 
-    ReservedInstanceLimitPriceType(; amount=nothing, currencyCode=nothing) = 
+    ReservedInstanceLimitPriceType(; amount=nothing, currencyCode=nothing) =
          new(amount, currencyCode)
 end
 function ReservedInstanceLimitPriceType(pd::ETree)
@@ -2459,7 +3018,7 @@ type PurchaseReservedInstancesOfferingResponseType
     requestId::Union(ASCIIString, Nothing)
     reservedInstancesId::Union(ASCIIString, Nothing)
 
-    PurchaseReservedInstancesOfferingResponseType(; requestId=nothing, reservedInstancesId=nothing) = 
+    PurchaseReservedInstancesOfferingResponseType(; requestId=nothing, reservedInstancesId=nothing) =
          new(requestId, reservedInstancesId)
 end
 function PurchaseReservedInstancesOfferingResponseType(pd::ETree)
@@ -2475,7 +3034,7 @@ export PurchaseReservedInstancesOfferingResponseType
 type DescribeReservedInstancesSetItemType
     reservedInstancesId::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesSetItemType(; reservedInstancesId=nothing) = 
+    DescribeReservedInstancesSetItemType(; reservedInstancesId=nothing) =
          new(reservedInstancesId)
 end
 function DescribeReservedInstancesSetItemType(pd::ETree)
@@ -2492,7 +3051,7 @@ type PriceScheduleRequestSetItemType
     price::Union(Float64, Nothing)
     currencyCode::Union(ASCIIString, Nothing)
 
-    PriceScheduleRequestSetItemType(; term=nothing, price=nothing, currencyCode=nothing) = 
+    PriceScheduleRequestSetItemType(; term=nothing, price=nothing, currencyCode=nothing) =
          new(term, price, currencyCode)
 end
 function PriceScheduleRequestSetItemType(pd::ETree)
@@ -2509,7 +3068,7 @@ export PriceScheduleRequestSetItemType
 type CancelReservedInstancesListingType
     reservedInstancesListingId::Union(ASCIIString, Nothing)
 
-    CancelReservedInstancesListingType(; reservedInstancesListingId=nothing) = 
+    CancelReservedInstancesListingType(; reservedInstancesListingId=nothing) =
          new(reservedInstancesListingId)
 end
 function CancelReservedInstancesListingType(pd::ETree)
@@ -2524,7 +3083,7 @@ export CancelReservedInstancesListingType
 type DescribeReservedInstancesListingSetItemType
     reservedInstancesListingId::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesListingSetItemType(; reservedInstancesListingId=nothing) = 
+    DescribeReservedInstancesListingSetItemType(; reservedInstancesListingId=nothing) =
          new(reservedInstancesListingId)
 end
 function DescribeReservedInstancesListingSetItemType(pd::ETree)
@@ -2540,7 +3099,7 @@ type InstanceCountsSetItemType
     state::Union(ASCIIString, Nothing)
     instanceCount::Union(Int64, Nothing)
 
-    InstanceCountsSetItemType(; state=nothing, instanceCount=nothing) = 
+    InstanceCountsSetItemType(; state=nothing, instanceCount=nothing) =
          new(state, instanceCount)
 end
 function InstanceCountsSetItemType(pd::ETree)
@@ -2559,7 +3118,7 @@ type PriceScheduleSetItemType
     currencyCode::Union(ASCIIString, Nothing)
     active::Union(Bool, Nothing)
 
-    PriceScheduleSetItemType(; term=nothing, price=nothing, currencyCode=nothing, active=nothing) = 
+    PriceScheduleSetItemType(; term=nothing, price=nothing, currencyCode=nothing, active=nothing) =
          new(term, price, currencyCode, active)
 end
 function PriceScheduleSetItemType(pd::ETree)
@@ -2577,7 +3136,7 @@ export PriceScheduleSetItemType
 type MonitorInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
 
-    MonitorInstancesType(; instancesSet=nothing) = 
+    MonitorInstancesType(; instancesSet=nothing) =
          new(instancesSet)
 end
 function MonitorInstancesType(pd::ETree)
@@ -2592,7 +3151,7 @@ export MonitorInstancesType
 type MonitorInstancesSetItemType
     instanceId::Union(ASCIIString, Nothing)
 
-    MonitorInstancesSetItemType(; instanceId=nothing) = 
+    MonitorInstancesSetItemType(; instanceId=nothing) =
          new(instanceId)
 end
 function MonitorInstancesSetItemType(pd::ETree)
@@ -2607,7 +3166,7 @@ export MonitorInstancesSetItemType
 type InstanceMonitoringStateType
     state::Union(ASCIIString, Nothing)
 
-    InstanceMonitoringStateType(; state=nothing) = 
+    InstanceMonitoringStateType(; state=nothing) =
          new(state)
 end
 function InstanceMonitoringStateType(pd::ETree)
@@ -2623,7 +3182,7 @@ type AttachmentType
     vpcId::Union(ASCIIString, Nothing)
     state::Union(ASCIIString, Nothing)
 
-    AttachmentType(; vpcId=nothing, state=nothing) = 
+    AttachmentType(; vpcId=nothing, state=nothing) =
          new(vpcId, state)
 end
 function AttachmentType(pd::ETree)
@@ -2639,7 +3198,7 @@ export AttachmentType
 type VpnConnectionOptionsResponseType
     staticRoutesOnly::Union(Bool, Nothing)
 
-    VpnConnectionOptionsResponseType(; staticRoutesOnly=nothing) = 
+    VpnConnectionOptionsResponseType(; staticRoutesOnly=nothing) =
          new(staticRoutesOnly)
 end
 function VpnConnectionOptionsResponseType(pd::ETree)
@@ -2656,7 +3215,7 @@ type VpnStaticRouteType
     source::Union(ASCIIString, Nothing)
     state::Union(ASCIIString, Nothing)
 
-    VpnStaticRouteType(; destinationCidrBlock=nothing, source=nothing, state=nothing) = 
+    VpnStaticRouteType(; destinationCidrBlock=nothing, source=nothing, state=nothing) =
          new(destinationCidrBlock, source, state)
 end
 function VpnStaticRouteType(pd::ETree)
@@ -2677,7 +3236,7 @@ type VpnTunnelTelemetryType
     statusMessage::Union(ASCIIString, Nothing)
     acceptedRouteCount::Union(Int64, Nothing)
 
-    VpnTunnelTelemetryType(; outsideIpAddress=nothing, status=nothing, lastStatusChange=nothing, statusMessage=nothing, acceptedRouteCount=nothing) = 
+    VpnTunnelTelemetryType(; outsideIpAddress=nothing, status=nothing, lastStatusChange=nothing, statusMessage=nothing, acceptedRouteCount=nothing) =
          new(outsideIpAddress, status, lastStatusChange, statusMessage, acceptedRouteCount)
 end
 function VpnTunnelTelemetryType(pd::ETree)
@@ -2696,7 +3255,7 @@ export VpnTunnelTelemetryType
 type CustomerGatewayIdSetItemType
     customerGatewayId::Union(ASCIIString, Nothing)
 
-    CustomerGatewayIdSetItemType(; customerGatewayId=nothing) = 
+    CustomerGatewayIdSetItemType(; customerGatewayId=nothing) =
          new(customerGatewayId)
 end
 function CustomerGatewayIdSetItemType(pd::ETree)
@@ -2711,7 +3270,7 @@ export CustomerGatewayIdSetItemType
 type VpnGatewayIdSetItemType
     vpnGatewayId::Union(ASCIIString, Nothing)
 
-    VpnGatewayIdSetItemType(; vpnGatewayId=nothing) = 
+    VpnGatewayIdSetItemType(; vpnGatewayId=nothing) =
          new(vpnGatewayId)
 end
 function VpnGatewayIdSetItemType(pd::ETree)
@@ -2726,7 +3285,7 @@ export VpnGatewayIdSetItemType
 type VpnConnectionIdSetItemType
     vpnConnectionId::Union(ASCIIString, Nothing)
 
-    VpnConnectionIdSetItemType(; vpnConnectionId=nothing) = 
+    VpnConnectionIdSetItemType(; vpnConnectionId=nothing) =
          new(vpnConnectionId)
 end
 function VpnConnectionIdSetItemType(pd::ETree)
@@ -2741,7 +3300,7 @@ export VpnConnectionIdSetItemType
 type VpcIdSetItemType
     vpcId::Union(ASCIIString, Nothing)
 
-    VpcIdSetItemType(; vpcId=nothing) = 
+    VpcIdSetItemType(; vpcId=nothing) =
          new(vpcId)
 end
 function VpcIdSetItemType(pd::ETree)
@@ -2756,7 +3315,7 @@ export VpcIdSetItemType
 type SubnetIdSetItemType
     subnetId::Union(ASCIIString, Nothing)
 
-    SubnetIdSetItemType(; subnetId=nothing) = 
+    SubnetIdSetItemType(; subnetId=nothing) =
          new(subnetId)
 end
 function SubnetIdSetItemType(pd::ETree)
@@ -2771,7 +3330,7 @@ export SubnetIdSetItemType
 type DhcpOptionsIdSetItemType
     dhcpOptionsId::Union(ASCIIString, Nothing)
 
-    DhcpOptionsIdSetItemType(; dhcpOptionsId=nothing) = 
+    DhcpOptionsIdSetItemType(; dhcpOptionsId=nothing) =
          new(dhcpOptionsId)
 end
 function DhcpOptionsIdSetItemType(pd::ETree)
@@ -2787,7 +3346,7 @@ type DhcpConfigurationItemType
     key::Union(ASCIIString, Nothing)
     valueSet::Union(Vector{ASCIIString}, Nothing)
 
-    DhcpConfigurationItemType(; key=nothing, valueSet=nothing) = 
+    DhcpConfigurationItemType(; key=nothing, valueSet=nothing) =
          new(key, valueSet)
 end
 function DhcpConfigurationItemType(pd::ETree)
@@ -2803,7 +3362,7 @@ export DhcpConfigurationItemType
 type DhcpValueType
     value::Union(ASCIIString, Nothing)
 
-    DhcpValueType(; value=nothing) = 
+    DhcpValueType(; value=nothing) =
          new(value)
 end
 function DhcpValueType(pd::ETree)
@@ -2815,27 +3374,10 @@ end
 export DhcpValueType
 
 
-type FilterType
-    name::Union(ASCIIString, Nothing)
-    valueSet::Union(Vector{ASCIIString}, Nothing)
-
-    FilterType(; name=nothing, valueSet=nothing) = 
-         new(name, valueSet)
-end
-function FilterType(pd::ETree)
-    o = FilterType()
-    o.name = LibExpat.find(pd, "name#string")
-    o.valueSet = AWS.parse_vector_as(ASCIIString, "value", LibExpat.find(pd, "item/value"))
-    o
-end
-
-export FilterType
-
-
 type ValueType
     value::Union(ASCIIString, Nothing)
 
-    ValueType(; value=nothing) = 
+    ValueType(; value=nothing) =
          new(value)
 end
 function ValueType(pd::ETree)
@@ -2852,7 +3394,7 @@ type CreateCustomerGatewayType
     ipAddress::Union(ASCIIString, Nothing)
     bgpAsn::Union(Int64, Nothing)
 
-    CreateCustomerGatewayType(; _type=nothing, ipAddress=nothing, bgpAsn=nothing) = 
+    CreateCustomerGatewayType(; _type=nothing, ipAddress=nothing, bgpAsn=nothing) =
          new(_type, ipAddress, bgpAsn)
 end
 function CreateCustomerGatewayType(pd::ETree)
@@ -2869,7 +3411,7 @@ export CreateCustomerGatewayType
 type DeleteCustomerGatewayType
     customerGatewayId::Union(ASCIIString, Nothing)
 
-    DeleteCustomerGatewayType(; customerGatewayId=nothing) = 
+    DeleteCustomerGatewayType(; customerGatewayId=nothing) =
          new(customerGatewayId)
 end
 function DeleteCustomerGatewayType(pd::ETree)
@@ -2885,7 +3427,7 @@ type DeleteCustomerGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteCustomerGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteCustomerGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteCustomerGatewayResponseType(pd::ETree)
@@ -2902,7 +3444,7 @@ type CreateVpnGatewayType
     _type::Union(ASCIIString, Nothing)
     availabilityZone::Union(ASCIIString, Nothing)
 
-    CreateVpnGatewayType(; _type=nothing, availabilityZone=nothing) = 
+    CreateVpnGatewayType(; _type=nothing, availabilityZone=nothing) =
          new(_type, availabilityZone)
 end
 function CreateVpnGatewayType(pd::ETree)
@@ -2918,7 +3460,7 @@ export CreateVpnGatewayType
 type DeleteVpnGatewayType
     vpnGatewayId::Union(ASCIIString, Nothing)
 
-    DeleteVpnGatewayType(; vpnGatewayId=nothing) = 
+    DeleteVpnGatewayType(; vpnGatewayId=nothing) =
          new(vpnGatewayId)
 end
 function DeleteVpnGatewayType(pd::ETree)
@@ -2934,7 +3476,7 @@ type DeleteVpnGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteVpnGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteVpnGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteVpnGatewayResponseType(pd::ETree)
@@ -2950,7 +3492,7 @@ export DeleteVpnGatewayResponseType
 type VpnConnectionOptionsRequestType
     staticRoutesOnly::Union(Bool, Nothing)
 
-    VpnConnectionOptionsRequestType(; staticRoutesOnly=nothing) = 
+    VpnConnectionOptionsRequestType(; staticRoutesOnly=nothing) =
          new(staticRoutesOnly)
 end
 function VpnConnectionOptionsRequestType(pd::ETree)
@@ -2966,7 +3508,7 @@ type CreateVpnConnectionRouteType
     vpnConnectionId::Union(ASCIIString, Nothing)
     destinationCidrBlock::Union(ASCIIString, Nothing)
 
-    CreateVpnConnectionRouteType(; vpnConnectionId=nothing, destinationCidrBlock=nothing) = 
+    CreateVpnConnectionRouteType(; vpnConnectionId=nothing, destinationCidrBlock=nothing) =
          new(vpnConnectionId, destinationCidrBlock)
 end
 function CreateVpnConnectionRouteType(pd::ETree)
@@ -2983,7 +3525,7 @@ type CreateVpnConnectionRouteResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CreateVpnConnectionRouteResponseType(; requestId=nothing, _return=nothing) = 
+    CreateVpnConnectionRouteResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CreateVpnConnectionRouteResponseType(pd::ETree)
@@ -3000,7 +3542,7 @@ type DeleteVpnConnectionRouteType
     vpnConnectionId::Union(ASCIIString, Nothing)
     destinationCidrBlock::Union(ASCIIString, Nothing)
 
-    DeleteVpnConnectionRouteType(; vpnConnectionId=nothing, destinationCidrBlock=nothing) = 
+    DeleteVpnConnectionRouteType(; vpnConnectionId=nothing, destinationCidrBlock=nothing) =
          new(vpnConnectionId, destinationCidrBlock)
 end
 function DeleteVpnConnectionRouteType(pd::ETree)
@@ -3017,7 +3559,7 @@ type DeleteVpnConnectionRouteResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteVpnConnectionRouteResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteVpnConnectionRouteResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteVpnConnectionRouteResponseType(pd::ETree)
@@ -3033,7 +3575,7 @@ export DeleteVpnConnectionRouteResponseType
 type DeleteVpnConnectionType
     vpnConnectionId::Union(ASCIIString, Nothing)
 
-    DeleteVpnConnectionType(; vpnConnectionId=nothing) = 
+    DeleteVpnConnectionType(; vpnConnectionId=nothing) =
          new(vpnConnectionId)
 end
 function DeleteVpnConnectionType(pd::ETree)
@@ -3049,7 +3591,7 @@ type DeleteVpnConnectionResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteVpnConnectionResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteVpnConnectionResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteVpnConnectionResponseType(pd::ETree)
@@ -3066,7 +3608,7 @@ type AttachVpnGatewayType
     vpnGatewayId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    AttachVpnGatewayType(; vpnGatewayId=nothing, vpcId=nothing) = 
+    AttachVpnGatewayType(; vpnGatewayId=nothing, vpcId=nothing) =
          new(vpnGatewayId, vpcId)
 end
 function AttachVpnGatewayType(pd::ETree)
@@ -3083,7 +3625,7 @@ type DetachVpnGatewayType
     vpnGatewayId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    DetachVpnGatewayType(; vpnGatewayId=nothing, vpcId=nothing) = 
+    DetachVpnGatewayType(; vpnGatewayId=nothing, vpcId=nothing) =
          new(vpnGatewayId, vpcId)
 end
 function DetachVpnGatewayType(pd::ETree)
@@ -3100,7 +3642,7 @@ type DetachVpnGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DetachVpnGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    DetachVpnGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DetachVpnGatewayResponseType(pd::ETree)
@@ -3117,7 +3659,7 @@ type CreateVpcType
     cidrBlock::Union(ASCIIString, Nothing)
     instanceTenancy::Union(ASCIIString, Nothing)
 
-    CreateVpcType(; cidrBlock=nothing, instanceTenancy=nothing) = 
+    CreateVpcType(; cidrBlock=nothing, instanceTenancy=nothing) =
          new(cidrBlock, instanceTenancy)
 end
 function CreateVpcType(pd::ETree)
@@ -3133,7 +3675,7 @@ export CreateVpcType
 type DeleteVpcType
     vpcId::Union(ASCIIString, Nothing)
 
-    DeleteVpcType(; vpcId=nothing) = 
+    DeleteVpcType(; vpcId=nothing) =
          new(vpcId)
 end
 function DeleteVpcType(pd::ETree)
@@ -3149,7 +3691,7 @@ type DeleteVpcResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteVpcResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteVpcResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteVpcResponseType(pd::ETree)
@@ -3167,7 +3709,7 @@ type CreateSubnetType
     cidrBlock::Union(ASCIIString, Nothing)
     availabilityZone::Union(ASCIIString, Nothing)
 
-    CreateSubnetType(; vpcId=nothing, cidrBlock=nothing, availabilityZone=nothing) = 
+    CreateSubnetType(; vpcId=nothing, cidrBlock=nothing, availabilityZone=nothing) =
          new(vpcId, cidrBlock, availabilityZone)
 end
 function CreateSubnetType(pd::ETree)
@@ -3184,7 +3726,7 @@ export CreateSubnetType
 type DeleteSubnetType
     subnetId::Union(ASCIIString, Nothing)
 
-    DeleteSubnetType(; subnetId=nothing) = 
+    DeleteSubnetType(; subnetId=nothing) =
          new(subnetId)
 end
 function DeleteSubnetType(pd::ETree)
@@ -3200,7 +3742,7 @@ type DeleteSubnetResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteSubnetResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteSubnetResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteSubnetResponseType(pd::ETree)
@@ -3216,7 +3758,7 @@ export DeleteSubnetResponseType
 type DeleteDhcpOptionsType
     dhcpOptionsId::Union(ASCIIString, Nothing)
 
-    DeleteDhcpOptionsType(; dhcpOptionsId=nothing) = 
+    DeleteDhcpOptionsType(; dhcpOptionsId=nothing) =
          new(dhcpOptionsId)
 end
 function DeleteDhcpOptionsType(pd::ETree)
@@ -3232,7 +3774,7 @@ type DeleteDhcpOptionsResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteDhcpOptionsResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteDhcpOptionsResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteDhcpOptionsResponseType(pd::ETree)
@@ -3249,7 +3791,7 @@ type AssociateDhcpOptionsType
     dhcpOptionsId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    AssociateDhcpOptionsType(; dhcpOptionsId=nothing, vpcId=nothing) = 
+    AssociateDhcpOptionsType(; dhcpOptionsId=nothing, vpcId=nothing) =
          new(dhcpOptionsId, vpcId)
 end
 function AssociateDhcpOptionsType(pd::ETree)
@@ -3266,7 +3808,7 @@ type AssociateDhcpOptionsResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    AssociateDhcpOptionsResponseType(; requestId=nothing, _return=nothing) = 
+    AssociateDhcpOptionsResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function AssociateDhcpOptionsResponseType(pd::ETree)
@@ -3283,7 +3825,7 @@ type SpotInstanceStateFaultType
     code::Union(ASCIIString, Nothing)
     message::Union(ASCIIString, Nothing)
 
-    SpotInstanceStateFaultType(; code=nothing, message=nothing) = 
+    SpotInstanceStateFaultType(; code=nothing, message=nothing) =
          new(code, message)
 end
 function SpotInstanceStateFaultType(pd::ETree)
@@ -3301,7 +3843,7 @@ type SpotInstanceStatusMessageType
     updateTime::Union(Base.Dates.DateTime, Nothing)
     message::Union(ASCIIString, Nothing)
 
-    SpotInstanceStatusMessageType(; code=nothing, updateTime=nothing, message=nothing) = 
+    SpotInstanceStatusMessageType(; code=nothing, updateTime=nothing, message=nothing) =
          new(code, updateTime, message)
 end
 function SpotInstanceStatusMessageType(pd::ETree)
@@ -3318,7 +3860,7 @@ export SpotInstanceStatusMessageType
 type SpotInstanceRequestIdSetItemType
     spotInstanceRequestId::Union(ASCIIString, Nothing)
 
-    SpotInstanceRequestIdSetItemType(; spotInstanceRequestId=nothing) = 
+    SpotInstanceRequestIdSetItemType(; spotInstanceRequestId=nothing) =
          new(spotInstanceRequestId)
 end
 function SpotInstanceRequestIdSetItemType(pd::ETree)
@@ -3333,7 +3875,7 @@ export SpotInstanceRequestIdSetItemType
 type CancelSpotInstanceRequestsType
     spotInstanceRequestIdSet::Union(Vector{ASCIIString}, Nothing)
 
-    CancelSpotInstanceRequestsType(; spotInstanceRequestIdSet=nothing) = 
+    CancelSpotInstanceRequestsType(; spotInstanceRequestIdSet=nothing) =
          new(spotInstanceRequestIdSet)
 end
 function CancelSpotInstanceRequestsType(pd::ETree)
@@ -3349,7 +3891,7 @@ type CancelSpotInstanceRequestsResponseSetItemType
     spotInstanceRequestId::Union(ASCIIString, Nothing)
     state::Union(ASCIIString, Nothing)
 
-    CancelSpotInstanceRequestsResponseSetItemType(; spotInstanceRequestId=nothing, state=nothing) = 
+    CancelSpotInstanceRequestsResponseSetItemType(; spotInstanceRequestId=nothing, state=nothing) =
          new(spotInstanceRequestId, state)
 end
 function CancelSpotInstanceRequestsResponseSetItemType(pd::ETree)
@@ -3365,7 +3907,7 @@ export CancelSpotInstanceRequestsResponseSetItemType
 type InstanceTypeSetItemType
     instanceType::Union(ASCIIString, Nothing)
 
-    InstanceTypeSetItemType(; instanceType=nothing) = 
+    InstanceTypeSetItemType(; instanceType=nothing) =
          new(instanceType)
 end
 function InstanceTypeSetItemType(pd::ETree)
@@ -3380,7 +3922,7 @@ export InstanceTypeSetItemType
 type ProductDescriptionSetItemType
     productDescription::Union(ASCIIString, Nothing)
 
-    ProductDescriptionSetItemType(; productDescription=nothing) = 
+    ProductDescriptionSetItemType(; productDescription=nothing) =
          new(productDescription)
 end
 function ProductDescriptionSetItemType(pd::ETree)
@@ -3399,7 +3941,7 @@ type SpotPriceHistorySetItemType
     timestamp::Union(Base.Dates.DateTime, Nothing)
     availabilityZone::Union(ASCIIString, Nothing)
 
-    SpotPriceHistorySetItemType(; instanceType=nothing, productDescription=nothing, spotPrice=nothing, timestamp=nothing, availabilityZone=nothing) = 
+    SpotPriceHistorySetItemType(; instanceType=nothing, productDescription=nothing, spotPrice=nothing, timestamp=nothing, availabilityZone=nothing) =
          new(instanceType, productDescription, spotPrice, timestamp, availabilityZone)
 end
 function SpotPriceHistorySetItemType(pd::ETree)
@@ -3419,7 +3961,7 @@ type CreateSpotDatafeedSubscriptionType
     bucket::Union(ASCIIString, Nothing)
     prefix::Union(ASCIIString, Nothing)
 
-    CreateSpotDatafeedSubscriptionType(; bucket=nothing, prefix=nothing) = 
+    CreateSpotDatafeedSubscriptionType(; bucket=nothing, prefix=nothing) =
          new(bucket, prefix)
 end
 function CreateSpotDatafeedSubscriptionType(pd::ETree)
@@ -3436,7 +3978,7 @@ type DeleteSpotDatafeedSubscriptionResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteSpotDatafeedSubscriptionResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteSpotDatafeedSubscriptionResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteSpotDatafeedSubscriptionResponseType(pd::ETree)
@@ -3452,7 +3994,7 @@ export DeleteSpotDatafeedSubscriptionResponseType
 type LicenseIdSetItemType
     licenseId::Union(ASCIIString, Nothing)
 
-    LicenseIdSetItemType(; licenseId=nothing) = 
+    LicenseIdSetItemType(; licenseId=nothing) =
          new(licenseId)
 end
 function LicenseIdSetItemType(pd::ETree)
@@ -3470,7 +4012,7 @@ type LicenseCapacitySetItemType
     state::Union(ASCIIString, Nothing)
     earliestAllowedDeactivationTime::Union(Base.Dates.DateTime, Nothing)
 
-    LicenseCapacitySetItemType(; capacity=nothing, instanceCapacity=nothing, state=nothing, earliestAllowedDeactivationTime=nothing) = 
+    LicenseCapacitySetItemType(; capacity=nothing, instanceCapacity=nothing, state=nothing, earliestAllowedDeactivationTime=nothing) =
          new(capacity, instanceCapacity, state, earliestAllowedDeactivationTime)
 end
 function LicenseCapacitySetItemType(pd::ETree)
@@ -3489,7 +4031,7 @@ type ActivateLicenseType
     licenseId::Union(ASCIIString, Nothing)
     capacity::Union(Int64, Nothing)
 
-    ActivateLicenseType(; licenseId=nothing, capacity=nothing) = 
+    ActivateLicenseType(; licenseId=nothing, capacity=nothing) =
          new(licenseId, capacity)
 end
 function ActivateLicenseType(pd::ETree)
@@ -3498,7 +4040,6 @@ function ActivateLicenseType(pd::ETree)
     o.capacity = AWS.safe_parse_as(Int64, LibExpat.find(pd, "capacity#string"))
     o
 end
-
 export ActivateLicenseType
 
 
@@ -3506,7 +4047,7 @@ type ActivateLicenseResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ActivateLicenseResponseType(; requestId=nothing, _return=nothing) = 
+    ActivateLicenseResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ActivateLicenseResponseType(pd::ETree)
@@ -3523,7 +4064,7 @@ type DeactivateLicenseType
     licenseId::Union(ASCIIString, Nothing)
     capacity::Union(Int64, Nothing)
 
-    DeactivateLicenseType(; licenseId=nothing, capacity=nothing) = 
+    DeactivateLicenseType(; licenseId=nothing, capacity=nothing) =
          new(licenseId, capacity)
 end
 function DeactivateLicenseType(pd::ETree)
@@ -3540,7 +4081,7 @@ type DeactivateLicenseResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeactivateLicenseResponseType(; requestId=nothing, _return=nothing) = 
+    DeactivateLicenseResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeactivateLicenseResponseType(pd::ETree)
@@ -3557,7 +4098,7 @@ type CreatePlacementGroupType
     groupName::Union(ASCIIString, Nothing)
     strategy::Union(ASCIIString, Nothing)
 
-    CreatePlacementGroupType(; groupName=nothing, strategy=nothing) = 
+    CreatePlacementGroupType(; groupName=nothing, strategy=nothing) =
          new(groupName, strategy)
 end
 function CreatePlacementGroupType(pd::ETree)
@@ -3574,7 +4115,7 @@ type CreatePlacementGroupResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CreatePlacementGroupResponseType(; requestId=nothing, _return=nothing) = 
+    CreatePlacementGroupResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CreatePlacementGroupResponseType(pd::ETree)
@@ -3590,7 +4131,7 @@ export CreatePlacementGroupResponseType
 type DeletePlacementGroupType
     groupName::Union(ASCIIString, Nothing)
 
-    DeletePlacementGroupType(; groupName=nothing) = 
+    DeletePlacementGroupType(; groupName=nothing) =
          new(groupName)
 end
 function DeletePlacementGroupType(pd::ETree)
@@ -3606,7 +4147,7 @@ type DeletePlacementGroupResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeletePlacementGroupResponseType(; requestId=nothing, _return=nothing) = 
+    DeletePlacementGroupResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeletePlacementGroupResponseType(pd::ETree)
@@ -3622,7 +4163,7 @@ export DeletePlacementGroupResponseType
 type DescribePlacementGroupItemType
     groupName::Union(ASCIIString, Nothing)
 
-    DescribePlacementGroupItemType(; groupName=nothing) = 
+    DescribePlacementGroupItemType(; groupName=nothing) =
          new(groupName)
 end
 function DescribePlacementGroupItemType(pd::ETree)
@@ -3639,7 +4180,7 @@ type PlacementGroupInfoType
     strategy::Union(ASCIIString, Nothing)
     state::Union(ASCIIString, Nothing)
 
-    PlacementGroupInfoType(; groupName=nothing, strategy=nothing, state=nothing) = 
+    PlacementGroupInfoType(; groupName=nothing, strategy=nothing, state=nothing) =
          new(groupName, strategy, state)
 end
 function PlacementGroupInfoType(pd::ETree)
@@ -3656,7 +4197,7 @@ export PlacementGroupInfoType
 type ResourceIdSetItemType
     resourceId::Union(ASCIIString, Nothing)
 
-    ResourceIdSetItemType(; resourceId=nothing) = 
+    ResourceIdSetItemType(; resourceId=nothing) =
          new(resourceId)
 end
 function ResourceIdSetItemType(pd::ETree)
@@ -3668,28 +4209,12 @@ end
 export ResourceIdSetItemType
 
 
-type ResourceTagSetItemType
-    key::Union(ASCIIString, Nothing)
-    value::Union(ASCIIString, Nothing)
-
-    ResourceTagSetItemType(; key=nothing, value=nothing) = 
-         new(key, value)
-end
-function ResourceTagSetItemType(pd::ETree)
-    o = ResourceTagSetItemType()
-    o.key = LibExpat.find(pd, "key#string")
-    o.value = LibExpat.find(pd, "value#string")
-    o
-end
-
-export ResourceTagSetItemType
-
 
 type CreateTagsResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CreateTagsResponseType(; requestId=nothing, _return=nothing) = 
+    CreateTagsResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CreateTagsResponseType(pd::ETree)
@@ -3708,7 +4233,7 @@ type TagSetItemType
     key::Union(ASCIIString, Nothing)
     value::Union(ASCIIString, Nothing)
 
-    TagSetItemType(; resourceId=nothing, resourceType=nothing, key=nothing, value=nothing) = 
+    TagSetItemType(; resourceId=nothing, resourceType=nothing, key=nothing, value=nothing) =
          new(resourceId, resourceType, key, value)
 end
 function TagSetItemType(pd::ETree)
@@ -3727,7 +4252,7 @@ type DeleteTagsSetItemType
     key::Union(ASCIIString, Nothing)
     value::Union(ASCIIString, Nothing)
 
-    DeleteTagsSetItemType(; key=nothing, value=nothing) = 
+    DeleteTagsSetItemType(; key=nothing, value=nothing) =
          new(key, value)
 end
 function DeleteTagsSetItemType(pd::ETree)
@@ -3744,7 +4269,7 @@ type DeleteTagsResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteTagsResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteTagsResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteTagsResponseType(pd::ETree)
@@ -3762,7 +4287,7 @@ type DiskImageDetailType
     bytes::Union(Int64, Nothing)
     importManifestUrl::Union(ASCIIString, Nothing)
 
-    DiskImageDetailType(; format=nothing, bytes=nothing, importManifestUrl=nothing) = 
+    DiskImageDetailType(; format=nothing, bytes=nothing, importManifestUrl=nothing) =
          new(format, bytes, importManifestUrl)
 end
 function DiskImageDetailType(pd::ETree)
@@ -3779,7 +4304,7 @@ export DiskImageDetailType
 type DiskImageVolumeType
     size::Union(Int64, Nothing)
 
-    DiskImageVolumeType(; size=nothing) = 
+    DiskImageVolumeType(; size=nothing) =
          new(size)
 end
 function DiskImageVolumeType(pd::ETree)
@@ -3795,7 +4320,7 @@ type DiskImageVolumeDescriptionType
     size::Union(Int64, Nothing)
     id::Union(ASCIIString, Nothing)
 
-    DiskImageVolumeDescriptionType(; size=nothing, id=nothing) = 
+    DiskImageVolumeDescriptionType(; size=nothing, id=nothing) =
          new(size, id)
 end
 function DiskImageVolumeDescriptionType(pd::ETree)
@@ -3814,7 +4339,7 @@ type DiskImageDescriptionType
     importManifestUrl::Union(ASCIIString, Nothing)
     checksum::Union(ASCIIString, Nothing)
 
-    DiskImageDescriptionType(; format=nothing, size=nothing, importManifestUrl=nothing, checksum=nothing) = 
+    DiskImageDescriptionType(; format=nothing, size=nothing, importManifestUrl=nothing, checksum=nothing) =
          new(format, size, importManifestUrl, checksum)
 end
 function DiskImageDescriptionType(pd::ETree)
@@ -3832,7 +4357,7 @@ export DiskImageDescriptionType
 type DescribeConversionTasksType
     conversionTaskIdSet::Union(Vector{ASCIIString}, Nothing)
 
-    DescribeConversionTasksType(; conversionTaskIdSet=nothing) = 
+    DescribeConversionTasksType(; conversionTaskIdSet=nothing) =
          new(conversionTaskIdSet)
 end
 function DescribeConversionTasksType(pd::ETree)
@@ -3847,7 +4372,7 @@ export DescribeConversionTasksType
 type ConversionTaskIdItemType
     conversionTaskId::Union(ASCIIString, Nothing)
 
-    ConversionTaskIdItemType(; conversionTaskId=nothing) = 
+    ConversionTaskIdItemType(; conversionTaskId=nothing) =
          new(conversionTaskId)
 end
 function ConversionTaskIdItemType(pd::ETree)
@@ -3862,7 +4387,7 @@ export ConversionTaskIdItemType
 type CancelConversionTaskType
     conversionTaskId::Union(ASCIIString, Nothing)
 
-    CancelConversionTaskType(; conversionTaskId=nothing) = 
+    CancelConversionTaskType(; conversionTaskId=nothing) =
          new(conversionTaskId)
 end
 function CancelConversionTaskType(pd::ETree)
@@ -3878,7 +4403,7 @@ type CancelConversionTaskResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CancelConversionTaskResponseType(; requestId=nothing, _return=nothing) = 
+    CancelConversionTaskResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CancelConversionTaskResponseType(pd::ETree)
@@ -3896,7 +4421,7 @@ type CreateInstanceExportTaskType
     instanceId::Union(ASCIIString, Nothing)
     targetEnvironment::Union(ASCIIString, Nothing)
 
-    CreateInstanceExportTaskType(; description=nothing, instanceId=nothing, targetEnvironment=nothing) = 
+    CreateInstanceExportTaskType(; description=nothing, instanceId=nothing, targetEnvironment=nothing) =
          new(description, instanceId, targetEnvironment)
 end
 function CreateInstanceExportTaskType(pd::ETree)
@@ -3916,7 +4441,7 @@ type ExportToS3TaskType
     s3Bucket::Union(ASCIIString, Nothing)
     s3Prefix::Union(ASCIIString, Nothing)
 
-    ExportToS3TaskType(; diskImageFormat=nothing, containerFormat=nothing, s3Bucket=nothing, s3Prefix=nothing) = 
+    ExportToS3TaskType(; diskImageFormat=nothing, containerFormat=nothing, s3Bucket=nothing, s3Prefix=nothing) =
          new(diskImageFormat, containerFormat, s3Bucket, s3Prefix)
 end
 function ExportToS3TaskType(pd::ETree)
@@ -3934,7 +4459,7 @@ export ExportToS3TaskType
 type DescribeExportTasksType
     exportTaskIdSet::Union(Vector{ASCIIString}, Nothing)
 
-    DescribeExportTasksType(; exportTaskIdSet=nothing) = 
+    DescribeExportTasksType(; exportTaskIdSet=nothing) =
          new(exportTaskIdSet)
 end
 function DescribeExportTasksType(pd::ETree)
@@ -3949,7 +4474,7 @@ export DescribeExportTasksType
 type ExportTaskIdType
     exportTaskId::Union(ASCIIString, Nothing)
 
-    ExportTaskIdType(; exportTaskId=nothing) = 
+    ExportTaskIdType(; exportTaskId=nothing) =
          new(exportTaskId)
 end
 function ExportTaskIdType(pd::ETree)
@@ -3967,7 +4492,7 @@ type ExportTaskResponseType
     state::Union(ASCIIString, Nothing)
     statusMessage::Union(ASCIIString, Nothing)
 
-    ExportTaskResponseType(; exportTaskId=nothing, description=nothing, state=nothing, statusMessage=nothing) = 
+    ExportTaskResponseType(; exportTaskId=nothing, description=nothing, state=nothing, statusMessage=nothing) =
          new(exportTaskId, description, state, statusMessage)
 end
 function ExportTaskResponseType(pd::ETree)
@@ -3986,7 +4511,7 @@ type InstanceExportTaskResponseType
     instanceId::Union(ASCIIString, Nothing)
     targetEnvironment::Union(ASCIIString, Nothing)
 
-    InstanceExportTaskResponseType(; instanceId=nothing, targetEnvironment=nothing) = 
+    InstanceExportTaskResponseType(; instanceId=nothing, targetEnvironment=nothing) =
          new(instanceId, targetEnvironment)
 end
 function InstanceExportTaskResponseType(pd::ETree)
@@ -4005,7 +4530,7 @@ type ExportToS3TaskResponseType
     s3Bucket::Union(ASCIIString, Nothing)
     s3Key::Union(ASCIIString, Nothing)
 
-    ExportToS3TaskResponseType(; diskImageFormat=nothing, containerFormat=nothing, s3Bucket=nothing, s3Key=nothing) = 
+    ExportToS3TaskResponseType(; diskImageFormat=nothing, containerFormat=nothing, s3Bucket=nothing, s3Key=nothing) =
          new(diskImageFormat, containerFormat, s3Bucket, s3Key)
 end
 function ExportToS3TaskResponseType(pd::ETree)
@@ -4023,7 +4548,7 @@ export ExportToS3TaskResponseType
 type CancelExportTaskType
     exportTaskId::Union(ASCIIString, Nothing)
 
-    CancelExportTaskType(; exportTaskId=nothing) = 
+    CancelExportTaskType(; exportTaskId=nothing) =
          new(exportTaskId)
 end
 function CancelExportTaskType(pd::ETree)
@@ -4039,7 +4564,7 @@ type CancelExportTaskResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CancelExportTaskResponseType(; requestId=nothing, _return=nothing) = 
+    CancelExportTaskResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CancelExportTaskResponseType(pd::ETree)
@@ -4056,7 +4581,7 @@ type InternetGatewayAttachmentType
     vpcId::Union(ASCIIString, Nothing)
     state::Union(ASCIIString, Nothing)
 
-    InternetGatewayAttachmentType(; vpcId=nothing, state=nothing) = 
+    InternetGatewayAttachmentType(; vpcId=nothing, state=nothing) =
          new(vpcId, state)
 end
 function InternetGatewayAttachmentType(pd::ETree)
@@ -4072,7 +4597,7 @@ export InternetGatewayAttachmentType
 type InternetGatewayIdSetItemType
     internetGatewayId::Union(ASCIIString, Nothing)
 
-    InternetGatewayIdSetItemType(; internetGatewayId=nothing) = 
+    InternetGatewayIdSetItemType(; internetGatewayId=nothing) =
          new(internetGatewayId)
 end
 function InternetGatewayIdSetItemType(pd::ETree)
@@ -4087,7 +4612,7 @@ export InternetGatewayIdSetItemType
 type DeleteInternetGatewayType
     internetGatewayId::Union(ASCIIString, Nothing)
 
-    DeleteInternetGatewayType(; internetGatewayId=nothing) = 
+    DeleteInternetGatewayType(; internetGatewayId=nothing) =
          new(internetGatewayId)
 end
 function DeleteInternetGatewayType(pd::ETree)
@@ -4103,7 +4628,7 @@ type DeleteInternetGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteInternetGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteInternetGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteInternetGatewayResponseType(pd::ETree)
@@ -4120,7 +4645,7 @@ type AttachInternetGatewayType
     internetGatewayId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    AttachInternetGatewayType(; internetGatewayId=nothing, vpcId=nothing) = 
+    AttachInternetGatewayType(; internetGatewayId=nothing, vpcId=nothing) =
          new(internetGatewayId, vpcId)
 end
 function AttachInternetGatewayType(pd::ETree)
@@ -4137,7 +4662,7 @@ type AttachInternetGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    AttachInternetGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    AttachInternetGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function AttachInternetGatewayResponseType(pd::ETree)
@@ -4154,7 +4679,7 @@ type DetachInternetGatewayType
     internetGatewayId::Union(ASCIIString, Nothing)
     vpcId::Union(ASCIIString, Nothing)
 
-    DetachInternetGatewayType(; internetGatewayId=nothing, vpcId=nothing) = 
+    DetachInternetGatewayType(; internetGatewayId=nothing, vpcId=nothing) =
          new(internetGatewayId, vpcId)
 end
 function DetachInternetGatewayType(pd::ETree)
@@ -4171,7 +4696,7 @@ type DetachInternetGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DetachInternetGatewayResponseType(; requestId=nothing, _return=nothing) = 
+    DetachInternetGatewayResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DetachInternetGatewayResponseType(pd::ETree)
@@ -4187,7 +4712,7 @@ export DetachInternetGatewayResponseType
 type CreateRouteTableType
     vpcId::Union(ASCIIString, Nothing)
 
-    CreateRouteTableType(; vpcId=nothing) = 
+    CreateRouteTableType(; vpcId=nothing) =
          new(vpcId)
 end
 function CreateRouteTableType(pd::ETree)
@@ -4208,7 +4733,7 @@ type RouteType
     state::Union(ASCIIString, Nothing)
     origin::Union(ASCIIString, Nothing)
 
-    RouteType(; destinationCidrBlock=nothing, gatewayId=nothing, instanceId=nothing, instanceOwnerId=nothing, networkInterfaceId=nothing, state=nothing, origin=nothing) = 
+    RouteType(; destinationCidrBlock=nothing, gatewayId=nothing, instanceId=nothing, instanceOwnerId=nothing, networkInterfaceId=nothing, state=nothing, origin=nothing) =
          new(destinationCidrBlock, gatewayId, instanceId, instanceOwnerId, networkInterfaceId, state, origin)
 end
 function RouteType(pd::ETree)
@@ -4230,7 +4755,7 @@ type RouteTableAssociationType
     routeTableAssociationId::Union(ASCIIString, Nothing)
     routeTableId::Union(ASCIIString, Nothing)
 
-    RouteTableAssociationType(; routeTableAssociationId=nothing, routeTableId=nothing) = 
+    RouteTableAssociationType(; routeTableAssociationId=nothing, routeTableId=nothing) =
          new(routeTableAssociationId, routeTableId)
 end
 function RouteTableAssociationType(pd::ETree)
@@ -4246,7 +4771,7 @@ export RouteTableAssociationType
 type PropagatingVgwType
     gatewayId::Union(ASCIIString, Nothing)
 
-    PropagatingVgwType(; gatewayId=nothing) = 
+    PropagatingVgwType(; gatewayId=nothing) =
          new(gatewayId)
 end
 function PropagatingVgwType(pd::ETree)
@@ -4261,7 +4786,7 @@ export PropagatingVgwType
 type RouteTableIdSetItemType
     routeTableId::Union(ASCIIString, Nothing)
 
-    RouteTableIdSetItemType(; routeTableId=nothing) = 
+    RouteTableIdSetItemType(; routeTableId=nothing) =
          new(routeTableId)
 end
 function RouteTableIdSetItemType(pd::ETree)
@@ -4277,7 +4802,7 @@ type EnableVgwRoutePropagationRequestType
     routeTableId::Union(ASCIIString, Nothing)
     gatewayId::Union(ASCIIString, Nothing)
 
-    EnableVgwRoutePropagationRequestType(; routeTableId=nothing, gatewayId=nothing) = 
+    EnableVgwRoutePropagationRequestType(; routeTableId=nothing, gatewayId=nothing) =
          new(routeTableId, gatewayId)
 end
 function EnableVgwRoutePropagationRequestType(pd::ETree)
@@ -4294,7 +4819,7 @@ type EnableVgwRoutePropagationResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    EnableVgwRoutePropagationResponseType(; requestId=nothing, _return=nothing) = 
+    EnableVgwRoutePropagationResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function EnableVgwRoutePropagationResponseType(pd::ETree)
@@ -4311,7 +4836,7 @@ type DisableVgwRoutePropagationRequestType
     routeTableId::Union(ASCIIString, Nothing)
     gatewayId::Union(ASCIIString, Nothing)
 
-    DisableVgwRoutePropagationRequestType(; routeTableId=nothing, gatewayId=nothing) = 
+    DisableVgwRoutePropagationRequestType(; routeTableId=nothing, gatewayId=nothing) =
          new(routeTableId, gatewayId)
 end
 function DisableVgwRoutePropagationRequestType(pd::ETree)
@@ -4328,7 +4853,7 @@ type DisableVgwRoutePropagationResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DisableVgwRoutePropagationResponseType(; requestId=nothing, _return=nothing) = 
+    DisableVgwRoutePropagationResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DisableVgwRoutePropagationResponseType(pd::ETree)
@@ -4344,7 +4869,7 @@ export DisableVgwRoutePropagationResponseType
 type DeleteRouteTableType
     routeTableId::Union(ASCIIString, Nothing)
 
-    DeleteRouteTableType(; routeTableId=nothing) = 
+    DeleteRouteTableType(; routeTableId=nothing) =
          new(routeTableId)
 end
 function DeleteRouteTableType(pd::ETree)
@@ -4360,7 +4885,7 @@ type DeleteRouteTableResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteRouteTableResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteRouteTableResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteRouteTableResponseType(pd::ETree)
@@ -4377,7 +4902,7 @@ type AssociateRouteTableType
     routeTableId::Union(ASCIIString, Nothing)
     subnetId::Union(ASCIIString, Nothing)
 
-    AssociateRouteTableType(; routeTableId=nothing, subnetId=nothing) = 
+    AssociateRouteTableType(; routeTableId=nothing, subnetId=nothing) =
          new(routeTableId, subnetId)
 end
 function AssociateRouteTableType(pd::ETree)
@@ -4394,7 +4919,7 @@ type AssociateRouteTableResponseType
     requestId::Union(ASCIIString, Nothing)
     associationId::Union(ASCIIString, Nothing)
 
-    AssociateRouteTableResponseType(; requestId=nothing, associationId=nothing) = 
+    AssociateRouteTableResponseType(; requestId=nothing, associationId=nothing) =
          new(requestId, associationId)
 end
 function AssociateRouteTableResponseType(pd::ETree)
@@ -4411,7 +4936,7 @@ type ReplaceRouteTableAssociationType
     associationId::Union(ASCIIString, Nothing)
     routeTableId::Union(ASCIIString, Nothing)
 
-    ReplaceRouteTableAssociationType(; associationId=nothing, routeTableId=nothing) = 
+    ReplaceRouteTableAssociationType(; associationId=nothing, routeTableId=nothing) =
          new(associationId, routeTableId)
 end
 function ReplaceRouteTableAssociationType(pd::ETree)
@@ -4428,7 +4953,7 @@ type ReplaceRouteTableAssociationResponseType
     requestId::Union(ASCIIString, Nothing)
     newAssociationId::Union(ASCIIString, Nothing)
 
-    ReplaceRouteTableAssociationResponseType(; requestId=nothing, newAssociationId=nothing) = 
+    ReplaceRouteTableAssociationResponseType(; requestId=nothing, newAssociationId=nothing) =
          new(requestId, newAssociationId)
 end
 function ReplaceRouteTableAssociationResponseType(pd::ETree)
@@ -4444,7 +4969,7 @@ export ReplaceRouteTableAssociationResponseType
 type DisassociateRouteTableType
     associationId::Union(ASCIIString, Nothing)
 
-    DisassociateRouteTableType(; associationId=nothing) = 
+    DisassociateRouteTableType(; associationId=nothing) =
          new(associationId)
 end
 function DisassociateRouteTableType(pd::ETree)
@@ -4460,7 +4985,7 @@ type DisassociateRouteTableResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DisassociateRouteTableResponseType(; requestId=nothing, _return=nothing) = 
+    DisassociateRouteTableResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DisassociateRouteTableResponseType(pd::ETree)
@@ -4477,7 +5002,7 @@ type CreateRouteType
     routeTableId::Union(ASCIIString, Nothing)
     destinationCidrBlock::Union(ASCIIString, Nothing)
 
-    CreateRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) = 
+    CreateRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) =
          new(routeTableId, destinationCidrBlock)
 end
 function CreateRouteType(pd::ETree)
@@ -4494,7 +5019,7 @@ type CreateRouteResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CreateRouteResponseType(; requestId=nothing, _return=nothing) = 
+    CreateRouteResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CreateRouteResponseType(pd::ETree)
@@ -4511,7 +5036,7 @@ type ReplaceRouteType
     routeTableId::Union(ASCIIString, Nothing)
     destinationCidrBlock::Union(ASCIIString, Nothing)
 
-    ReplaceRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) = 
+    ReplaceRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) =
          new(routeTableId, destinationCidrBlock)
 end
 function ReplaceRouteType(pd::ETree)
@@ -4528,7 +5053,7 @@ type ReplaceRouteResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ReplaceRouteResponseType(; requestId=nothing, _return=nothing) = 
+    ReplaceRouteResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ReplaceRouteResponseType(pd::ETree)
@@ -4545,7 +5070,7 @@ type DeleteRouteType
     routeTableId::Union(ASCIIString, Nothing)
     destinationCidrBlock::Union(ASCIIString, Nothing)
 
-    DeleteRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) = 
+    DeleteRouteType(; routeTableId=nothing, destinationCidrBlock=nothing) =
          new(routeTableId, destinationCidrBlock)
 end
 function DeleteRouteType(pd::ETree)
@@ -4562,7 +5087,7 @@ type DeleteRouteResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteRouteResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteRouteResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteRouteResponseType(pd::ETree)
@@ -4578,7 +5103,7 @@ export DeleteRouteResponseType
 type CreateNetworkAclType
     vpcId::Union(ASCIIString, Nothing)
 
-    CreateNetworkAclType(; vpcId=nothing) = 
+    CreateNetworkAclType(; vpcId=nothing) =
          new(vpcId)
 end
 function CreateNetworkAclType(pd::ETree)
@@ -4594,7 +5119,7 @@ type IcmpTypeCodeType
     code::Union(Int64, Nothing)
     _type::Union(Int64, Nothing)
 
-    IcmpTypeCodeType(; code=nothing, _type=nothing) = 
+    IcmpTypeCodeType(; code=nothing, _type=nothing) =
          new(code, _type)
 end
 function IcmpTypeCodeType(pd::ETree)
@@ -4611,7 +5136,7 @@ type PortRangeType
     from::Union(Int64, Nothing)
     to::Union(Int64, Nothing)
 
-    PortRangeType(; from=nothing, to=nothing) = 
+    PortRangeType(; from=nothing, to=nothing) =
          new(from, to)
 end
 function PortRangeType(pd::ETree)
@@ -4629,7 +5154,7 @@ type NetworkAclAssociationType
     networkAclId::Union(ASCIIString, Nothing)
     subnetId::Union(ASCIIString, Nothing)
 
-    NetworkAclAssociationType(; networkAclAssociationId=nothing, networkAclId=nothing, subnetId=nothing) = 
+    NetworkAclAssociationType(; networkAclAssociationId=nothing, networkAclId=nothing, subnetId=nothing) =
          new(networkAclAssociationId, networkAclId, subnetId)
 end
 function NetworkAclAssociationType(pd::ETree)
@@ -4646,7 +5171,7 @@ export NetworkAclAssociationType
 type NetworkAclIdSetItemType
     networkAclId::Union(ASCIIString, Nothing)
 
-    NetworkAclIdSetItemType(; networkAclId=nothing) = 
+    NetworkAclIdSetItemType(; networkAclId=nothing) =
          new(networkAclId)
 end
 function NetworkAclIdSetItemType(pd::ETree)
@@ -4661,7 +5186,7 @@ export NetworkAclIdSetItemType
 type DeleteNetworkAclType
     networkAclId::Union(ASCIIString, Nothing)
 
-    DeleteNetworkAclType(; networkAclId=nothing) = 
+    DeleteNetworkAclType(; networkAclId=nothing) =
          new(networkAclId)
 end
 function DeleteNetworkAclType(pd::ETree)
@@ -4677,7 +5202,7 @@ type DeleteNetworkAclResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteNetworkAclResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteNetworkAclResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteNetworkAclResponseType(pd::ETree)
@@ -4694,7 +5219,7 @@ type ReplaceNetworkAclAssociationType
     associationId::Union(ASCIIString, Nothing)
     networkAclId::Union(ASCIIString, Nothing)
 
-    ReplaceNetworkAclAssociationType(; associationId=nothing, networkAclId=nothing) = 
+    ReplaceNetworkAclAssociationType(; associationId=nothing, networkAclId=nothing) =
          new(associationId, networkAclId)
 end
 function ReplaceNetworkAclAssociationType(pd::ETree)
@@ -4711,7 +5236,7 @@ type ReplaceNetworkAclAssociationResponseType
     requestId::Union(ASCIIString, Nothing)
     newAssociationId::Union(ASCIIString, Nothing)
 
-    ReplaceNetworkAclAssociationResponseType(; requestId=nothing, newAssociationId=nothing) = 
+    ReplaceNetworkAclAssociationResponseType(; requestId=nothing, newAssociationId=nothing) =
          new(requestId, newAssociationId)
 end
 function ReplaceNetworkAclAssociationResponseType(pd::ETree)
@@ -4728,7 +5253,7 @@ type CreateNetworkAclEntryResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    CreateNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) = 
+    CreateNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function CreateNetworkAclEntryResponseType(pd::ETree)
@@ -4745,7 +5270,7 @@ type ReplaceNetworkAclEntryResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ReplaceNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) = 
+    ReplaceNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ReplaceNetworkAclEntryResponseType(pd::ETree)
@@ -4763,7 +5288,7 @@ type DeleteNetworkAclEntryType
     ruleNumber::Union(Int64, Nothing)
     egress::Union(Bool, Nothing)
 
-    DeleteNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, egress=nothing) = 
+    DeleteNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, egress=nothing) =
          new(networkAclId, ruleNumber, egress)
 end
 function DeleteNetworkAclEntryType(pd::ETree)
@@ -4781,7 +5306,7 @@ type DeleteNetworkAclEntryResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteNetworkAclEntryResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteNetworkAclEntryResponseType(pd::ETree)
@@ -4799,7 +5324,7 @@ type InstanceStatusDetailsSetItemType
     status::Union(ASCIIString, Nothing)
     impairedSince::Union(Base.Dates.DateTime, Nothing)
 
-    InstanceStatusDetailsSetItemType(; name=nothing, status=nothing, impairedSince=nothing) = 
+    InstanceStatusDetailsSetItemType(; name=nothing, status=nothing, impairedSince=nothing) =
          new(name, status, impairedSince)
 end
 function InstanceStatusDetailsSetItemType(pd::ETree)
@@ -4819,7 +5344,7 @@ type InstanceStatusEventType
     notBefore::Union(Base.Dates.DateTime, Nothing)
     notAfter::Union(Base.Dates.DateTime, Nothing)
 
-    InstanceStatusEventType(; code=nothing, description=nothing, notBefore=nothing, notAfter=nothing) = 
+    InstanceStatusEventType(; code=nothing, description=nothing, notBefore=nothing, notAfter=nothing) =
          new(code, description, notBefore, notAfter)
 end
 function InstanceStatusEventType(pd::ETree)
@@ -4842,7 +5367,7 @@ type ReportInstanceStatusType
     reasonCodesSet::Union(Vector{ASCIIString}, Nothing)
     description::Union(ASCIIString, Nothing)
 
-    ReportInstanceStatusType(; instancesSet=nothing, status=nothing, startTime=nothing, endTime=nothing, reasonCodesSet=nothing, description=nothing) = 
+    ReportInstanceStatusType(; instancesSet=nothing, status=nothing, startTime=nothing, endTime=nothing, reasonCodesSet=nothing, description=nothing) =
          new(instancesSet, status, startTime, endTime, reasonCodesSet, description)
 end
 function ReportInstanceStatusType(pd::ETree)
@@ -4862,7 +5387,7 @@ export ReportInstanceStatusType
 type ReportInstanceStatusReasonCodeSetItemType
     reasonCode::Union(ASCIIString, Nothing)
 
-    ReportInstanceStatusReasonCodeSetItemType(; reasonCode=nothing) = 
+    ReportInstanceStatusReasonCodeSetItemType(; reasonCode=nothing) =
          new(reasonCode)
 end
 function ReportInstanceStatusReasonCodeSetItemType(pd::ETree)
@@ -4878,7 +5403,7 @@ type ReportInstanceStatusResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ReportInstanceStatusResponseType(; requestId=nothing, _return=nothing) = 
+    ReportInstanceStatusResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ReportInstanceStatusResponseType(pd::ETree)
@@ -4894,7 +5419,7 @@ export ReportInstanceStatusResponseType
 type NetworkInterfaceIdSetItemType
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    NetworkInterfaceIdSetItemType(; networkInterfaceId=nothing) = 
+    NetworkInterfaceIdSetItemType(; networkInterfaceId=nothing) =
          new(networkInterfaceId)
 end
 function NetworkInterfaceIdSetItemType(pd::ETree)
@@ -4915,7 +5440,7 @@ type NetworkInterfaceAttachmentType
     attachTime::Union(Base.Dates.DateTime, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    NetworkInterfaceAttachmentType(; attachmentId=nothing, instanceId=nothing, instanceOwnerId=nothing, deviceIndex=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) = 
+    NetworkInterfaceAttachmentType(; attachmentId=nothing, instanceId=nothing, instanceOwnerId=nothing, deviceIndex=nothing, status=nothing, attachTime=nothing, deleteOnTermination=nothing) =
          new(attachmentId, instanceId, instanceOwnerId, deviceIndex, status, attachTime, deleteOnTermination)
 end
 function NetworkInterfaceAttachmentType(pd::ETree)
@@ -4940,7 +5465,7 @@ type NetworkInterfaceAssociationType
     allocationId::Union(ASCIIString, Nothing)
     associationId::Union(ASCIIString, Nothing)
 
-    NetworkInterfaceAssociationType(; publicIp=nothing, publicDnsName=nothing, ipOwnerId=nothing, allocationId=nothing, associationId=nothing) = 
+    NetworkInterfaceAssociationType(; publicIp=nothing, publicDnsName=nothing, ipOwnerId=nothing, allocationId=nothing, associationId=nothing) =
          new(publicIp, publicDnsName, ipOwnerId, allocationId, associationId)
 end
 function NetworkInterfaceAssociationType(pd::ETree)
@@ -4959,7 +5484,7 @@ export NetworkInterfaceAssociationType
 type DeleteNetworkInterfaceType
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    DeleteNetworkInterfaceType(; networkInterfaceId=nothing) = 
+    DeleteNetworkInterfaceType(; networkInterfaceId=nothing) =
          new(networkInterfaceId)
 end
 function DeleteNetworkInterfaceType(pd::ETree)
@@ -4975,7 +5500,7 @@ type DeleteNetworkInterfaceResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DeleteNetworkInterfaceResponseType(; requestId=nothing, _return=nothing) = 
+    DeleteNetworkInterfaceResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DeleteNetworkInterfaceResponseType(pd::ETree)
@@ -4993,7 +5518,7 @@ type AttachNetworkInterfaceType
     instanceId::Union(ASCIIString, Nothing)
     deviceIndex::Union(Int64, Nothing)
 
-    AttachNetworkInterfaceType(; networkInterfaceId=nothing, instanceId=nothing, deviceIndex=nothing) = 
+    AttachNetworkInterfaceType(; networkInterfaceId=nothing, instanceId=nothing, deviceIndex=nothing) =
          new(networkInterfaceId, instanceId, deviceIndex)
 end
 function AttachNetworkInterfaceType(pd::ETree)
@@ -5011,7 +5536,7 @@ type AttachNetworkInterfaceResponseType
     requestId::Union(ASCIIString, Nothing)
     attachmentId::Union(ASCIIString, Nothing)
 
-    AttachNetworkInterfaceResponseType(; requestId=nothing, attachmentId=nothing) = 
+    AttachNetworkInterfaceResponseType(; requestId=nothing, attachmentId=nothing) =
          new(requestId, attachmentId)
 end
 function AttachNetworkInterfaceResponseType(pd::ETree)
@@ -5028,7 +5553,7 @@ type DetachNetworkInterfaceType
     attachmentId::Union(ASCIIString, Nothing)
     force::Union(Bool, Nothing)
 
-    DetachNetworkInterfaceType(; attachmentId=nothing, force=nothing) = 
+    DetachNetworkInterfaceType(; attachmentId=nothing, force=nothing) =
          new(attachmentId, force)
 end
 function DetachNetworkInterfaceType(pd::ETree)
@@ -5045,7 +5570,7 @@ type DetachNetworkInterfaceResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    DetachNetworkInterfaceResponseType(; requestId=nothing, _return=nothing) = 
+    DetachNetworkInterfaceResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function DetachNetworkInterfaceResponseType(pd::ETree)
@@ -5061,7 +5586,7 @@ export DetachNetworkInterfaceResponseType
 type DescribeNetworkInterfaceAttributeType
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    DescribeNetworkInterfaceAttributeType(; networkInterfaceId=nothing) = 
+    DescribeNetworkInterfaceAttributeType(; networkInterfaceId=nothing) =
          new(networkInterfaceId)
 end
 function DescribeNetworkInterfaceAttributeType(pd::ETree)
@@ -5077,7 +5602,7 @@ type DescribeNetworkInterfaceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    DescribeNetworkInterfaceAttributeResponseType(; requestId=nothing, networkInterfaceId=nothing) = 
+    DescribeNetworkInterfaceAttributeResponseType(; requestId=nothing, networkInterfaceId=nothing) =
          new(requestId, networkInterfaceId)
 end
 function DescribeNetworkInterfaceAttributeResponseType(pd::ETree)
@@ -5093,7 +5618,7 @@ export DescribeNetworkInterfaceAttributeResponseType
 type ModifyNetworkInterfaceAttributeType
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    ModifyNetworkInterfaceAttributeType(; networkInterfaceId=nothing) = 
+    ModifyNetworkInterfaceAttributeType(; networkInterfaceId=nothing) =
          new(networkInterfaceId)
 end
 function ModifyNetworkInterfaceAttributeType(pd::ETree)
@@ -5109,7 +5634,7 @@ type ModifyNetworkInterfaceAttachmentType
     attachmentId::Union(ASCIIString, Nothing)
     deleteOnTermination::Union(Bool, Nothing)
 
-    ModifyNetworkInterfaceAttachmentType(; attachmentId=nothing, deleteOnTermination=nothing) = 
+    ModifyNetworkInterfaceAttachmentType(; attachmentId=nothing, deleteOnTermination=nothing) =
          new(attachmentId, deleteOnTermination)
 end
 function ModifyNetworkInterfaceAttachmentType(pd::ETree)
@@ -5126,7 +5651,7 @@ type ModifyNetworkInterfaceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifyNetworkInterfaceAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifyNetworkInterfaceAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifyNetworkInterfaceAttributeResponseType(pd::ETree)
@@ -5142,7 +5667,7 @@ export ModifyNetworkInterfaceAttributeResponseType
 type ResetNetworkInterfaceAttributeType
     networkInterfaceId::Union(ASCIIString, Nothing)
 
-    ResetNetworkInterfaceAttributeType(; networkInterfaceId=nothing) = 
+    ResetNetworkInterfaceAttributeType(; networkInterfaceId=nothing) =
          new(networkInterfaceId)
 end
 function ResetNetworkInterfaceAttributeType(pd::ETree)
@@ -5158,7 +5683,7 @@ type ResetNetworkInterfaceAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ResetNetworkInterfaceAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ResetNetworkInterfaceAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ResetNetworkInterfaceAttributeResponseType(pd::ETree)
@@ -5177,7 +5702,7 @@ type AssignPrivateIpAddressesType
     secondaryPrivateIpAddressCount::Union(Int64, Nothing)
     allowReassignment::Union(Bool, Nothing)
 
-    AssignPrivateIpAddressesType(; networkInterfaceId=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing, allowReassignment=nothing) = 
+    AssignPrivateIpAddressesType(; networkInterfaceId=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing, allowReassignment=nothing) =
          new(networkInterfaceId, privateIpAddressesSet, secondaryPrivateIpAddressCount, allowReassignment)
 end
 function AssignPrivateIpAddressesType(pd::ETree)
@@ -5196,7 +5721,7 @@ type AssignPrivateIpAddressesResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    AssignPrivateIpAddressesResponseType(; requestId=nothing, _return=nothing) = 
+    AssignPrivateIpAddressesResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function AssignPrivateIpAddressesResponseType(pd::ETree)
@@ -5213,7 +5738,7 @@ type UnassignPrivateIpAddressesType
     networkInterfaceId::Union(ASCIIString, Nothing)
     privateIpAddressesSet::Union(Vector{ASCIIString}, Nothing)
 
-    UnassignPrivateIpAddressesType(; networkInterfaceId=nothing, privateIpAddressesSet=nothing) = 
+    UnassignPrivateIpAddressesType(; networkInterfaceId=nothing, privateIpAddressesSet=nothing) =
          new(networkInterfaceId, privateIpAddressesSet)
 end
 function UnassignPrivateIpAddressesType(pd::ETree)
@@ -5230,7 +5755,7 @@ type UnassignPrivateIpAddressesResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    UnassignPrivateIpAddressesResponseType(; requestId=nothing, _return=nothing) = 
+    UnassignPrivateIpAddressesResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function UnassignPrivateIpAddressesResponseType(pd::ETree)
@@ -5246,7 +5771,7 @@ export UnassignPrivateIpAddressesResponseType
 type AssignPrivateIpAddressesSetItemRequestType
     privateIpAddress::Union(ASCIIString, Nothing)
 
-    AssignPrivateIpAddressesSetItemRequestType(; privateIpAddress=nothing) = 
+    AssignPrivateIpAddressesSetItemRequestType(; privateIpAddress=nothing) =
          new(privateIpAddress)
 end
 function AssignPrivateIpAddressesSetItemRequestType(pd::ETree)
@@ -5262,7 +5787,7 @@ type VolumeStatusDetailsItemType
     name::Union(ASCIIString, Nothing)
     status::Union(ASCIIString, Nothing)
 
-    VolumeStatusDetailsItemType(; name=nothing, status=nothing) = 
+    VolumeStatusDetailsItemType(; name=nothing, status=nothing) =
          new(name, status)
 end
 function VolumeStatusDetailsItemType(pd::ETree)
@@ -5282,7 +5807,7 @@ type VolumeStatusEventItemType
     eventId::Union(ASCIIString, Nothing)
     eventType::Union(ASCIIString, Nothing)
 
-    VolumeStatusEventItemType(; description=nothing, notBefore=nothing, notAfter=nothing, eventId=nothing, eventType=nothing) = 
+    VolumeStatusEventItemType(; description=nothing, notBefore=nothing, notAfter=nothing, eventId=nothing, eventType=nothing) =
          new(description, notBefore, notAfter, eventId, eventType)
 end
 function VolumeStatusEventItemType(pd::ETree)
@@ -5304,7 +5829,7 @@ type VolumeStatusActionItemType
     eventId::Union(ASCIIString, Nothing)
     eventType::Union(ASCIIString, Nothing)
 
-    VolumeStatusActionItemType(; description=nothing, code=nothing, eventId=nothing, eventType=nothing) = 
+    VolumeStatusActionItemType(; description=nothing, code=nothing, eventId=nothing, eventType=nothing) =
          new(description, code, eventId, eventType)
 end
 function VolumeStatusActionItemType(pd::ETree)
@@ -5322,7 +5847,7 @@ export VolumeStatusActionItemType
 type EnableVolumeIOType
     volumeId::Union(ASCIIString, Nothing)
 
-    EnableVolumeIOType(; volumeId=nothing) = 
+    EnableVolumeIOType(; volumeId=nothing) =
          new(volumeId)
 end
 function EnableVolumeIOType(pd::ETree)
@@ -5338,7 +5863,7 @@ type EnableVolumeIOResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    EnableVolumeIOResponseType(; requestId=nothing, _return=nothing) = 
+    EnableVolumeIOResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function EnableVolumeIOResponseType(pd::ETree)
@@ -5354,7 +5879,7 @@ export EnableVolumeIOResponseType
 type ModifyVolumeAttributeType
     volumeId::Union(ASCIIString, Nothing)
 
-    ModifyVolumeAttributeType(; volumeId=nothing) = 
+    ModifyVolumeAttributeType(; volumeId=nothing) =
          new(volumeId)
 end
 function ModifyVolumeAttributeType(pd::ETree)
@@ -5370,7 +5895,7 @@ type ModifyVolumeAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     _return::Union(Bool, Nothing)
 
-    ModifyVolumeAttributeResponseType(; requestId=nothing, _return=nothing) = 
+    ModifyVolumeAttributeResponseType(; requestId=nothing, _return=nothing) =
          new(requestId, _return)
 end
 function ModifyVolumeAttributeResponseType(pd::ETree)
@@ -5386,7 +5911,7 @@ export ModifyVolumeAttributeResponseType
 type DescribeVolumeAttributeType
     volumeId::Union(ASCIIString, Nothing)
 
-    DescribeVolumeAttributeType(; volumeId=nothing) = 
+    DescribeVolumeAttributeType(; volumeId=nothing) =
          new(volumeId)
 end
 function DescribeVolumeAttributeType(pd::ETree)
@@ -5402,7 +5927,7 @@ type DescribeVolumeAttributeResponseType
     requestId::Union(ASCIIString, Nothing)
     volumeId::Union(ASCIIString, Nothing)
 
-    DescribeVolumeAttributeResponseType(; requestId=nothing, volumeId=nothing) = 
+    DescribeVolumeAttributeResponseType(; requestId=nothing, volumeId=nothing) =
          new(requestId, volumeId)
 end
 function DescribeVolumeAttributeResponseType(pd::ETree)
@@ -5419,7 +5944,7 @@ type LaunchPermissionOperationType
     add::Union(Vector{LaunchPermissionItemType}, Nothing)
     remove::Union(Vector{LaunchPermissionItemType}, Nothing)
 
-    LaunchPermissionOperationType(; add=nothing, remove=nothing) = 
+    LaunchPermissionOperationType(; add=nothing, remove=nothing) =
          new(add, remove)
 end
 function LaunchPermissionOperationType(pd::ETree)
@@ -5449,7 +5974,7 @@ type DescribeReservedInstancesResponseSetItemType
     offeringType::Union(ASCIIString, Nothing)
     recurringCharges::Union(Vector{RecurringChargesSetItemType}, Nothing)
 
-    DescribeReservedInstancesResponseSetItemType(; reservedInstancesId=nothing, instanceType=nothing, availabilityZone=nothing, start=nothing, duration=nothing, fixedPrice=nothing, usagePrice=nothing, instanceCount=nothing, productDescription=nothing, state=nothing, tagSet=nothing, instanceTenancy=nothing, currencyCode=nothing, offeringType=nothing, recurringCharges=nothing) = 
+    DescribeReservedInstancesResponseSetItemType(; reservedInstancesId=nothing, instanceType=nothing, availabilityZone=nothing, start=nothing, duration=nothing, fixedPrice=nothing, usagePrice=nothing, instanceCount=nothing, productDescription=nothing, state=nothing, tagSet=nothing, instanceTenancy=nothing, currencyCode=nothing, offeringType=nothing, recurringCharges=nothing) =
          new(reservedInstancesId, instanceType, availabilityZone, start, duration, fixedPrice, usagePrice, instanceCount, productDescription, state, tagSet, instanceTenancy, currencyCode, offeringType, recurringCharges)
 end
 function DescribeReservedInstancesResponseSetItemType(pd::ETree)
@@ -5479,7 +6004,7 @@ type CancelSpotInstanceRequestsResponseType
     requestId::Union(ASCIIString, Nothing)
     spotInstanceRequestSet::Union(Vector{CancelSpotInstanceRequestsResponseSetItemType}, Nothing)
 
-    CancelSpotInstanceRequestsResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) = 
+    CancelSpotInstanceRequestsResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) =
          new(requestId, spotInstanceRequestSet)
 end
 function CancelSpotInstanceRequestsResponseType(pd::ETree)
@@ -5495,7 +6020,7 @@ export CancelSpotInstanceRequestsResponseType
 type CreateDhcpOptionsType
     dhcpConfigurationSet::Union(Vector{DhcpConfigurationItemType}, Nothing)
 
-    CreateDhcpOptionsType(; dhcpConfigurationSet=nothing) = 
+    CreateDhcpOptionsType(; dhcpConfigurationSet=nothing) =
          new(dhcpConfigurationSet)
 end
 function CreateDhcpOptionsType(pd::ETree)
@@ -5514,7 +6039,7 @@ type DescribeInstanceStatusType
     maxResults::Union(Int64, Nothing)
     includeAllInstances::Union(Bool, Nothing)
 
-    DescribeInstanceStatusType(; instancesSet=nothing, filterSet=nothing, nextToken=nothing, maxResults=nothing, includeAllInstances=nothing) = 
+    DescribeInstanceStatusType(; instancesSet=nothing, filterSet=nothing, nextToken=nothing, maxResults=nothing, includeAllInstances=nothing) =
          new(instancesSet, filterSet, nextToken, maxResults, includeAllInstances)
 end
 function DescribeInstanceStatusType(pd::ETree)
@@ -5534,7 +6059,7 @@ type DescribePlacementGroupsType
     placementGroupSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribePlacementGroupsType(; placementGroupSet=nothing, filterSet=nothing) = 
+    DescribePlacementGroupsType(; placementGroupSet=nothing, filterSet=nothing) =
          new(placementGroupSet, filterSet)
 end
 function DescribePlacementGroupsType(pd::ETree)
@@ -5557,7 +6082,7 @@ type RegisterImageType
     rootDeviceName::Union(ASCIIString, Nothing)
     blockDeviceMapping::Union(Vector{BlockDeviceMappingItemType}, Nothing)
 
-    RegisterImageType(; imageLocation=nothing, name=nothing, description=nothing, architecture=nothing, kernelId=nothing, ramdiskId=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing) = 
+    RegisterImageType(; imageLocation=nothing, name=nothing, description=nothing, architecture=nothing, kernelId=nothing, ramdiskId=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing) =
          new(imageLocation, name, description, architecture, kernelId, ramdiskId, rootDeviceName, blockDeviceMapping)
 end
 function RegisterImageType(pd::ETree)
@@ -5580,7 +6105,7 @@ type DescribeNetworkInterfacesType
     networkInterfaceIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeNetworkInterfacesType(; networkInterfaceIdSet=nothing, filterSet=nothing) = 
+    DescribeNetworkInterfacesType(; networkInterfaceIdSet=nothing, filterSet=nothing) =
          new(networkInterfaceIdSet, filterSet)
 end
 function DescribeNetworkInterfacesType(pd::ETree)
@@ -5599,7 +6124,7 @@ type CreateReservedInstancesListingType
     priceSchedules::Union(Vector{PriceScheduleRequestSetItemType}, Nothing)
     clientToken::Union(ASCIIString, Nothing)
 
-    CreateReservedInstancesListingType(; reservedInstancesId=nothing, instanceCount=nothing, priceSchedules=nothing, clientToken=nothing) = 
+    CreateReservedInstancesListingType(; reservedInstancesId=nothing, instanceCount=nothing, priceSchedules=nothing, clientToken=nothing) =
          new(reservedInstancesId, instanceCount, priceSchedules, clientToken)
 end
 function CreateReservedInstancesListingType(pd::ETree)
@@ -5618,7 +6143,7 @@ type DescribeVpnGatewaysType
     vpnGatewaySet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeVpnGatewaysType(; vpnGatewaySet=nothing, filterSet=nothing) = 
+    DescribeVpnGatewaysType(; vpnGatewaySet=nothing, filterSet=nothing) =
          new(vpnGatewaySet, filterSet)
 end
 function DescribeVpnGatewaysType(pd::ETree)
@@ -5637,7 +6162,7 @@ type DescribeVolumeStatusType
     maxResults::Union(Int64, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeVolumeStatusType(; volumeSet=nothing, filterSet=nothing, maxResults=nothing, nextToken=nothing) = 
+    DescribeVolumeStatusType(; volumeSet=nothing, filterSet=nothing, maxResults=nothing, nextToken=nothing) =
          new(volumeSet, filterSet, maxResults, nextToken)
 end
 function DescribeVolumeStatusType(pd::ETree)
@@ -5657,7 +6182,7 @@ type DhcpOptionsType
     dhcpConfigurationSet::Union(Vector{DhcpConfigurationItemType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    DhcpOptionsType(; dhcpOptionsId=nothing, dhcpConfigurationSet=nothing, tagSet=nothing) = 
+    DhcpOptionsType(; dhcpOptionsId=nothing, dhcpConfigurationSet=nothing, tagSet=nothing) =
          new(dhcpOptionsId, dhcpConfigurationSet, tagSet)
 end
 function DhcpOptionsType(pd::ETree)
@@ -5680,7 +6205,7 @@ type ImportInstanceVolumeDetailItemType
     status::Union(ASCIIString, Nothing)
     statusMessage::Union(ASCIIString, Nothing)
 
-    ImportInstanceVolumeDetailItemType(; bytesConverted=nothing, availabilityZone=nothing, image=nothing, description=nothing, volume=nothing, status=nothing, statusMessage=nothing) = 
+    ImportInstanceVolumeDetailItemType(; bytesConverted=nothing, availabilityZone=nothing, image=nothing, description=nothing, volume=nothing, status=nothing, statusMessage=nothing) =
          new(bytesConverted, availabilityZone, image, description, volume, status, statusMessage)
 end
 function ImportInstanceVolumeDetailItemType(pd::ETree)
@@ -5702,7 +6227,7 @@ type DescribeExportTasksResponseType
     requestId::Union(ASCIIString, Nothing)
     exportTaskSet::Union(Vector{ExportTaskResponseType}, Nothing)
 
-    DescribeExportTasksResponseType(; requestId=nothing, exportTaskSet=nothing) = 
+    DescribeExportTasksResponseType(; requestId=nothing, exportTaskSet=nothing) =
          new(requestId, exportTaskSet)
 end
 function DescribeExportTasksResponseType(pd::ETree)
@@ -5720,7 +6245,7 @@ type DescribeSecurityGroupsType
     securityGroupIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeSecurityGroupsType(; securityGroupSet=nothing, securityGroupIdSet=nothing, filterSet=nothing) = 
+    DescribeSecurityGroupsType(; securityGroupSet=nothing, securityGroupIdSet=nothing, filterSet=nothing) =
          new(securityGroupSet, securityGroupIdSet, filterSet)
 end
 function DescribeSecurityGroupsType(pd::ETree)
@@ -5738,7 +6263,7 @@ type InstanceStatusType
     status::Union(ASCIIString, Nothing)
     details::Union(Vector{InstanceStatusDetailsSetItemType}, Nothing)
 
-    InstanceStatusType(; status=nothing, details=nothing) = 
+    InstanceStatusType(; status=nothing, details=nothing) =
          new(status, details)
 end
 function InstanceStatusType(pd::ETree)
@@ -5774,7 +6299,7 @@ type DescribeImagesResponseItemType
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
     hypervisor::Union(ASCIIString, Nothing)
 
-    DescribeImagesResponseItemType(; imageId=nothing, imageLocation=nothing, imageState=nothing, imageOwnerId=nothing, isPublic=nothing, productCodes=nothing, architecture=nothing, imageType=nothing, kernelId=nothing, ramdiskId=nothing, platform=nothing, stateReason=nothing, imageOwnerAlias=nothing, name=nothing, description=nothing, rootDeviceType=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing, virtualizationType=nothing, tagSet=nothing, hypervisor=nothing) = 
+    DescribeImagesResponseItemType(; imageId=nothing, imageLocation=nothing, imageState=nothing, imageOwnerId=nothing, isPublic=nothing, productCodes=nothing, architecture=nothing, imageType=nothing, kernelId=nothing, ramdiskId=nothing, platform=nothing, stateReason=nothing, imageOwnerAlias=nothing, name=nothing, description=nothing, rootDeviceType=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing, virtualizationType=nothing, tagSet=nothing, hypervisor=nothing) =
          new(imageId, imageLocation, imageState, imageOwnerId, isPublic, productCodes, architecture, imageType, kernelId, ramdiskId, platform, stateReason, imageOwnerAlias, name, description, rootDeviceType, rootDeviceName, blockDeviceMapping, virtualizationType, tagSet, hypervisor)
 end
 function DescribeImagesResponseItemType(pd::ETree)
@@ -5810,7 +6335,7 @@ type DescribeBundleTasksType
     bundlesSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeBundleTasksType(; bundlesSet=nothing, filterSet=nothing) = 
+    DescribeBundleTasksType(; bundlesSet=nothing, filterSet=nothing) =
          new(bundlesSet, filterSet)
 end
 function DescribeBundleTasksType(pd::ETree)
@@ -5827,7 +6352,7 @@ type DeleteTagsType
     resourcesSet::Union(Vector{ASCIIString}, Nothing)
     tagSet::Union(Vector{DeleteTagsSetItemType}, Nothing)
 
-    DeleteTagsType(; resourcesSet=nothing, tagSet=nothing) = 
+    DeleteTagsType(; resourcesSet=nothing, tagSet=nothing) =
          new(resourcesSet, tagSet)
 end
 function DeleteTagsType(pd::ETree)
@@ -5847,7 +6372,7 @@ type SpotDatafeedSubscriptionType
     state::Union(ASCIIString, Nothing)
     fault::Union(SpotInstanceStateFaultType, Nothing)
 
-    SpotDatafeedSubscriptionType(; ownerId=nothing, bucket=nothing, prefix=nothing, state=nothing, fault=nothing) = 
+    SpotDatafeedSubscriptionType(; ownerId=nothing, bucket=nothing, prefix=nothing, state=nothing, fault=nothing) =
          new(ownerId, bucket, prefix, state, fault)
 end
 function SpotDatafeedSubscriptionType(pd::ETree)
@@ -5867,7 +6392,7 @@ type DescribeNetworkAclsType
     networkAclIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeNetworkAclsType(; networkAclIdSet=nothing, filterSet=nothing) = 
+    DescribeNetworkAclsType(; networkAclIdSet=nothing, filterSet=nothing) =
          new(networkAclIdSet, filterSet)
 end
 function DescribeNetworkAclsType(pd::ETree)
@@ -5892,7 +6417,7 @@ type DescribeVolumesSetItemResponseType
     volumeType::Union(ASCIIString, Nothing)
     iops::Union(Int64, Nothing)
 
-    DescribeVolumesSetItemResponseType(; volumeId=nothing, size=nothing, snapshotId=nothing, availabilityZone=nothing, status=nothing, createTime=nothing, attachmentSet=nothing, tagSet=nothing, volumeType=nothing, iops=nothing) = 
+    DescribeVolumesSetItemResponseType(; volumeId=nothing, size=nothing, snapshotId=nothing, availabilityZone=nothing, status=nothing, createTime=nothing, attachmentSet=nothing, tagSet=nothing, volumeType=nothing, iops=nothing) =
          new(volumeId, size, snapshotId, availabilityZone, status, createTime, attachmentSet, tagSet, volumeType, iops)
 end
 function DescribeVolumesSetItemResponseType(pd::ETree)
@@ -5917,7 +6442,7 @@ type DescribeVolumesType
     volumeSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeVolumesType(; volumeSet=nothing, filterSet=nothing) = 
+    DescribeVolumesType(; volumeSet=nothing, filterSet=nothing) =
          new(volumeSet, filterSet)
 end
 function DescribeVolumesType(pd::ETree)
@@ -5934,7 +6459,7 @@ type DescribeDhcpOptionsType
     dhcpOptionsSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeDhcpOptionsType(; dhcpOptionsSet=nothing, filterSet=nothing) = 
+    DescribeDhcpOptionsType(; dhcpOptionsSet=nothing, filterSet=nothing) =
          new(dhcpOptionsSet, filterSet)
 end
 function DescribeDhcpOptionsType(pd::ETree)
@@ -5951,7 +6476,7 @@ type CreateTagsType
     resourcesSet::Union(Vector{ASCIIString}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    CreateTagsType(; resourcesSet=nothing, tagSet=nothing) = 
+    CreateTagsType(; resourcesSet=nothing, tagSet=nothing) =
          new(resourcesSet, tagSet)
 end
 function CreateTagsType(pd::ETree)
@@ -5970,7 +6495,7 @@ type ImportInstanceTaskDetailsType
     platform::Union(ASCIIString, Nothing)
     description::Union(ASCIIString, Nothing)
 
-    ImportInstanceTaskDetailsType(; volumes=nothing, instanceId=nothing, platform=nothing, description=nothing) = 
+    ImportInstanceTaskDetailsType(; volumes=nothing, instanceId=nothing, platform=nothing, description=nothing) =
          new(volumes, instanceId, platform, description)
 end
 function ImportInstanceTaskDetailsType(pd::ETree)
@@ -5992,7 +6517,7 @@ type ConversionTaskType
     statusMessage::Union(ASCIIString, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    ConversionTaskType(; conversionTaskId=nothing, expirationTime=nothing, state=nothing, statusMessage=nothing, tagSet=nothing) = 
+    ConversionTaskType(; conversionTaskId=nothing, expirationTime=nothing, state=nothing, statusMessage=nothing, tagSet=nothing) =
          new(conversionTaskId, expirationTime, state, statusMessage, tagSet)
 end
 function ConversionTaskType(pd::ETree)
@@ -6012,7 +6537,7 @@ type CreateSpotDatafeedSubscriptionResponseType
     requestId::Union(ASCIIString, Nothing)
     spotDatafeedSubscription::Union(SpotDatafeedSubscriptionType, Nothing)
 
-    CreateSpotDatafeedSubscriptionResponseType(; requestId=nothing, spotDatafeedSubscription=nothing) = 
+    CreateSpotDatafeedSubscriptionResponseType(; requestId=nothing, spotDatafeedSubscription=nothing) =
          new(requestId, spotDatafeedSubscription)
 end
 function CreateSpotDatafeedSubscriptionResponseType(pd::ETree)
@@ -6029,7 +6554,7 @@ type DescribeCustomerGatewaysType
     customerGatewaySet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeCustomerGatewaysType(; customerGatewaySet=nothing, filterSet=nothing) = 
+    DescribeCustomerGatewaysType(; customerGatewaySet=nothing, filterSet=nothing) =
          new(customerGatewaySet, filterSet)
 end
 function DescribeCustomerGatewaysType(pd::ETree)
@@ -6046,7 +6571,7 @@ type DescribePlacementGroupsResponseType
     requestId::Union(ASCIIString, Nothing)
     placementGroupSet::Union(Vector{PlacementGroupInfoType}, Nothing)
 
-    DescribePlacementGroupsResponseType(; requestId=nothing, placementGroupSet=nothing) = 
+    DescribePlacementGroupsResponseType(; requestId=nothing, placementGroupSet=nothing) =
          new(requestId, placementGroupSet)
 end
 function DescribePlacementGroupsResponseType(pd::ETree)
@@ -6063,7 +6588,7 @@ type DescribeReservedInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     reservedInstancesSet::Union(Vector{DescribeReservedInstancesResponseSetItemType}, Nothing)
 
-    DescribeReservedInstancesResponseType(; requestId=nothing, reservedInstancesSet=nothing) = 
+    DescribeReservedInstancesResponseType(; requestId=nothing, reservedInstancesSet=nothing) =
          new(requestId, reservedInstancesSet)
 end
 function DescribeReservedInstancesResponseType(pd::ETree)
@@ -6086,7 +6611,7 @@ type ReplaceNetworkAclEntryType
     icmpTypeCode::Union(IcmpTypeCodeType, Nothing)
     portRange::Union(PortRangeType, Nothing)
 
-    ReplaceNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) = 
+    ReplaceNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) =
          new(networkAclId, ruleNumber, protocol, ruleAction, egress, cidrBlock, icmpTypeCode, portRange)
 end
 function ReplaceNetworkAclEntryType(pd::ETree)
@@ -6114,7 +6639,7 @@ type NetworkAclEntryType
     icmpTypeCode::Union(IcmpTypeCodeType, Nothing)
     portRange::Union(PortRangeType, Nothing)
 
-    NetworkAclEntryType(; ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) = 
+    NetworkAclEntryType(; ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) =
          new(ruleNumber, protocol, ruleAction, egress, cidrBlock, icmpTypeCode, portRange)
 end
 function NetworkAclEntryType(pd::ETree)
@@ -6137,7 +6662,7 @@ type InternetGatewayType
     attachmentSet::Union(Vector{InternetGatewayAttachmentType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    InternetGatewayType(; internetGatewayId=nothing, attachmentSet=nothing, tagSet=nothing) = 
+    InternetGatewayType(; internetGatewayId=nothing, attachmentSet=nothing, tagSet=nothing) =
          new(internetGatewayId, attachmentSet, tagSet)
 end
 function InternetGatewayType(pd::ETree)
@@ -6155,7 +6680,7 @@ type DescribeRegionsType
     regionSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeRegionsType(; regionSet=nothing, filterSet=nothing) = 
+    DescribeRegionsType(; regionSet=nothing, filterSet=nothing) =
          new(regionSet, filterSet)
 end
 function DescribeRegionsType(pd::ETree)
@@ -6174,7 +6699,7 @@ type DescribeSnapshotsType
     restorableBySet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeSnapshotsType(; snapshotSet=nothing, ownersSet=nothing, restorableBySet=nothing, filterSet=nothing) = 
+    DescribeSnapshotsType(; snapshotSet=nothing, ownersSet=nothing, restorableBySet=nothing, filterSet=nothing) =
          new(snapshotSet, ownersSet, restorableBySet, filterSet)
 end
 function DescribeSnapshotsType(pd::ETree)
@@ -6193,7 +6718,7 @@ type DescribeKeyPairsResponseType
     requestId::Union(ASCIIString, Nothing)
     keySet::Union(Vector{DescribeKeyPairsResponseItemType}, Nothing)
 
-    DescribeKeyPairsResponseType(; requestId=nothing, keySet=nothing) = 
+    DescribeKeyPairsResponseType(; requestId=nothing, keySet=nothing) =
          new(requestId, keySet)
 end
 function DescribeKeyPairsResponseType(pd::ETree)
@@ -6210,7 +6735,7 @@ type DescribeAvailabilityZonesResponseType
     requestId::Union(ASCIIString, Nothing)
     availabilityZoneInfo::Union(Vector{AvailabilityZoneItemType}, Nothing)
 
-    DescribeAvailabilityZonesResponseType(; requestId=nothing, availabilityZoneInfo=nothing) = 
+    DescribeAvailabilityZonesResponseType(; requestId=nothing, availabilityZoneInfo=nothing) =
          new(requestId, availabilityZoneInfo)
 end
 function DescribeAvailabilityZonesResponseType(pd::ETree)
@@ -6232,7 +6757,7 @@ type VpcType
     instanceTenancy::Union(ASCIIString, Nothing)
     isDefault::Union(Bool, Nothing)
 
-    VpcType(; vpcId=nothing, state=nothing, cidrBlock=nothing, dhcpOptionsId=nothing, tagSet=nothing, instanceTenancy=nothing, isDefault=nothing) = 
+    VpcType(; vpcId=nothing, state=nothing, cidrBlock=nothing, dhcpOptionsId=nothing, tagSet=nothing, instanceTenancy=nothing, isDefault=nothing) =
          new(vpcId, state, cidrBlock, dhcpOptionsId, tagSet, instanceTenancy, isDefault)
 end
 function VpcType(pd::ETree)
@@ -6254,7 +6779,7 @@ type DescribeSubnetsType
     subnetSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeSubnetsType(; subnetSet=nothing, filterSet=nothing) = 
+    DescribeSubnetsType(; subnetSet=nothing, filterSet=nothing) =
          new(subnetSet, filterSet)
 end
 function DescribeSubnetsType(pd::ETree)
@@ -6271,7 +6796,7 @@ type DescribeRegionsResponseType
     requestId::Union(ASCIIString, Nothing)
     regionInfo::Union(Vector{RegionItemType}, Nothing)
 
-    DescribeRegionsResponseType(; requestId=nothing, regionInfo=nothing) = 
+    DescribeRegionsResponseType(; requestId=nothing, regionInfo=nothing) =
          new(requestId, regionInfo)
 end
 function DescribeRegionsResponseType(pd::ETree)
@@ -6288,7 +6813,7 @@ type DescribeSpotDatafeedSubscriptionResponseType
     requestId::Union(ASCIIString, Nothing)
     spotDatafeedSubscription::Union(SpotDatafeedSubscriptionType, Nothing)
 
-    DescribeSpotDatafeedSubscriptionResponseType(; requestId=nothing, spotDatafeedSubscription=nothing) = 
+    DescribeSpotDatafeedSubscriptionResponseType(; requestId=nothing, spotDatafeedSubscription=nothing) =
          new(requestId, spotDatafeedSubscription)
 end
 function DescribeSpotDatafeedSubscriptionResponseType(pd::ETree)
@@ -6306,7 +6831,7 @@ type DescribeReservedInstancesType
     filterSet::Union(Vector{FilterType}, Nothing)
     offeringType::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesType(; reservedInstancesSet=nothing, filterSet=nothing, offeringType=nothing) = 
+    DescribeReservedInstancesType(; reservedInstancesSet=nothing, filterSet=nothing, offeringType=nothing) =
          new(reservedInstancesSet, filterSet, offeringType)
 end
 function DescribeReservedInstancesType(pd::ETree)
@@ -6335,7 +6860,7 @@ type DescribeReservedInstancesOfferingsType
     nextToken::Union(ASCIIString, Nothing)
     maxResults::Union(Int64, Nothing)
 
-    DescribeReservedInstancesOfferingsType(; reservedInstancesOfferingsSet=nothing, instanceType=nothing, availabilityZone=nothing, productDescription=nothing, filterSet=nothing, instanceTenancy=nothing, offeringType=nothing, includeMarketplace=nothing, minDuration=nothing, maxDuration=nothing, maxInstanceCount=nothing, nextToken=nothing, maxResults=nothing) = 
+    DescribeReservedInstancesOfferingsType(; reservedInstancesOfferingsSet=nothing, instanceType=nothing, availabilityZone=nothing, productDescription=nothing, filterSet=nothing, instanceTenancy=nothing, offeringType=nothing, includeMarketplace=nothing, minDuration=nothing, maxDuration=nothing, maxInstanceCount=nothing, nextToken=nothing, maxResults=nothing) =
          new(reservedInstancesOfferingsSet, instanceType, availabilityZone, productDescription, filterSet, instanceTenancy, offeringType, includeMarketplace, minDuration, maxDuration, maxInstanceCount, nextToken, maxResults)
 end
 function DescribeReservedInstancesOfferingsType(pd::ETree)
@@ -6365,7 +6890,7 @@ type DescribeImagesType
     ownersSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeImagesType(; executableBySet=nothing, imagesSet=nothing, ownersSet=nothing, filterSet=nothing) = 
+    DescribeImagesType(; executableBySet=nothing, imagesSet=nothing, ownersSet=nothing, filterSet=nothing) =
          new(executableBySet, imagesSet, ownersSet, filterSet)
 end
 function DescribeImagesType(pd::ETree)
@@ -6384,7 +6909,7 @@ type DescribeConversionTasksResponseType
     requestId::Union(ASCIIString, Nothing)
     conversionTasks::Union(Vector{ConversionTaskType}, Nothing)
 
-    DescribeConversionTasksResponseType(; requestId=nothing, conversionTasks=nothing) = 
+    DescribeConversionTasksResponseType(; requestId=nothing, conversionTasks=nothing) =
          new(requestId, conversionTasks)
 end
 function DescribeConversionTasksResponseType(pd::ETree)
@@ -6401,7 +6926,7 @@ type DescribeAccountAttributesResponseType
     requestId::Union(ASCIIString, Nothing)
     accountAttributeSet::Union(Vector{AccountAttributeSetItemType}, Nothing)
 
-    DescribeAccountAttributesResponseType(; requestId=nothing, accountAttributeSet=nothing) = 
+    DescribeAccountAttributesResponseType(; requestId=nothing, accountAttributeSet=nothing) =
          new(requestId, accountAttributeSet)
 end
 function DescribeAccountAttributesResponseType(pd::ETree)
@@ -6424,7 +6949,7 @@ type CreateNetworkAclEntryType
     icmpTypeCode::Union(IcmpTypeCodeType, Nothing)
     portRange::Union(PortRangeType, Nothing)
 
-    CreateNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) = 
+    CreateNetworkAclEntryType(; networkAclId=nothing, ruleNumber=nothing, protocol=nothing, ruleAction=nothing, egress=nothing, cidrBlock=nothing, icmpTypeCode=nothing, portRange=nothing) =
          new(networkAclId, ruleNumber, protocol, ruleAction, egress, cidrBlock, icmpTypeCode, portRange)
 end
 function CreateNetworkAclEntryType(pd::ETree)
@@ -6455,7 +6980,7 @@ type DescribeSnapshotsSetItemResponseType
     ownerAlias::Union(ASCIIString, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    DescribeSnapshotsSetItemResponseType(; snapshotId=nothing, volumeId=nothing, status=nothing, startTime=nothing, progress=nothing, ownerId=nothing, volumeSize=nothing, description=nothing, ownerAlias=nothing, tagSet=nothing) = 
+    DescribeSnapshotsSetItemResponseType(; snapshotId=nothing, volumeId=nothing, status=nothing, startTime=nothing, progress=nothing, ownerId=nothing, volumeSize=nothing, description=nothing, ownerAlias=nothing, tagSet=nothing) =
          new(snapshotId, volumeId, status, startTime, progress, ownerId, volumeSize, description, ownerAlias, tagSet)
 end
 function DescribeSnapshotsSetItemResponseType(pd::ETree)
@@ -6479,7 +7004,7 @@ export DescribeSnapshotsSetItemResponseType
 type BundleInstanceTaskStorageType
     S3::Union(BundleInstanceS3StorageType, Nothing)
 
-    BundleInstanceTaskStorageType(; S3=nothing) = 
+    BundleInstanceTaskStorageType(; S3=nothing) =
          new(S3)
 end
 function BundleInstanceTaskStorageType(pd::ETree)
@@ -6499,7 +7024,7 @@ type InstanceStatusItemType
     systemStatus::Union(InstanceStatusType, Nothing)
     instanceStatus::Union(InstanceStatusType, Nothing)
 
-    InstanceStatusItemType(; instanceId=nothing, availabilityZone=nothing, eventsSet=nothing, instanceState=nothing, systemStatus=nothing, instanceStatus=nothing) = 
+    InstanceStatusItemType(; instanceId=nothing, availabilityZone=nothing, eventsSet=nothing, instanceState=nothing, systemStatus=nothing, instanceStatus=nothing) =
          new(instanceId, availabilityZone, eventsSet, instanceState, systemStatus, instanceStatus)
 end
 function InstanceStatusItemType(pd::ETree)
@@ -6527,7 +7052,7 @@ type InstanceNetworkInterfaceSetItemRequestType
     privateIpAddressesSet::Union(Vector{PrivateIpAddressesSetItemRequestType}, Nothing)
     secondaryPrivateIpAddressCount::Union(Int64, Nothing)
 
-    InstanceNetworkInterfaceSetItemRequestType(; networkInterfaceId=nothing, deviceIndex=nothing, subnetId=nothing, description=nothing, privateIpAddress=nothing, groupSet=nothing, deleteOnTermination=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing) = 
+    InstanceNetworkInterfaceSetItemRequestType(; networkInterfaceId=nothing, deviceIndex=nothing, subnetId=nothing, description=nothing, privateIpAddress=nothing, groupSet=nothing, deleteOnTermination=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing) =
          new(networkInterfaceId, deviceIndex, subnetId, description, privateIpAddress, groupSet, deleteOnTermination, privateIpAddressesSet, secondaryPrivateIpAddressCount)
 end
 function InstanceNetworkInterfaceSetItemRequestType(pd::ETree)
@@ -6552,7 +7077,7 @@ type DescribeReservedInstancesListingsType
     reservedInstancesSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeReservedInstancesListingsType(; reservedInstancesListingSet=nothing, reservedInstancesSet=nothing, filterSet=nothing) = 
+    DescribeReservedInstancesListingsType(; reservedInstancesListingSet=nothing, reservedInstancesSet=nothing, filterSet=nothing) =
          new(reservedInstancesListingSet, reservedInstancesSet, filterSet)
 end
 function DescribeReservedInstancesListingsType(pd::ETree)
@@ -6576,7 +7101,7 @@ type DescribeSpotPriceHistoryType
     maxResults::Union(Int64, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeSpotPriceHistoryType(; startTime=nothing, endTime=nothing, instanceTypeSet=nothing, productDescriptionSet=nothing, filterSet=nothing, availabilityZone=nothing, maxResults=nothing, nextToken=nothing) = 
+    DescribeSpotPriceHistoryType(; startTime=nothing, endTime=nothing, instanceTypeSet=nothing, productDescriptionSet=nothing, filterSet=nothing, availabilityZone=nothing, maxResults=nothing, nextToken=nothing) =
          new(startTime, endTime, instanceTypeSet, productDescriptionSet, filterSet, availabilityZone, maxResults, nextToken)
 end
 function DescribeSpotPriceHistoryType(pd::ETree)
@@ -6610,7 +7135,7 @@ type DescribeReservedInstancesOfferingsResponseSetItemType
     marketplace::Union(Bool, Nothing)
     pricingDetailsSet::Union(Vector{PricingDetailsSetItemType}, Nothing)
 
-    DescribeReservedInstancesOfferingsResponseSetItemType(; reservedInstancesOfferingId=nothing, instanceType=nothing, availabilityZone=nothing, duration=nothing, fixedPrice=nothing, usagePrice=nothing, productDescription=nothing, instanceTenancy=nothing, currencyCode=nothing, offeringType=nothing, recurringCharges=nothing, marketplace=nothing, pricingDetailsSet=nothing) = 
+    DescribeReservedInstancesOfferingsResponseSetItemType(; reservedInstancesOfferingId=nothing, instanceType=nothing, availabilityZone=nothing, duration=nothing, fixedPrice=nothing, usagePrice=nothing, productDescription=nothing, instanceTenancy=nothing, currencyCode=nothing, offeringType=nothing, recurringCharges=nothing, marketplace=nothing, pricingDetailsSet=nothing) =
          new(reservedInstancesOfferingId, instanceType, availabilityZone, duration, fixedPrice, usagePrice, productDescription, instanceTenancy, currencyCode, offeringType, recurringCharges, marketplace, pricingDetailsSet)
 end
 function DescribeReservedInstancesOfferingsResponseSetItemType(pd::ETree)
@@ -6641,7 +7166,7 @@ type IpPermissionType
     groups::Union(Vector{UserIdGroupPairType}, Nothing)
     ipRanges::Union(Vector{ASCIIString}, Nothing)
 
-    IpPermissionType(; ipProtocol=nothing, fromPort=nothing, toPort=nothing, groups=nothing, ipRanges=nothing) = 
+    IpPermissionType(; ipProtocol=nothing, fromPort=nothing, toPort=nothing, groups=nothing, ipRanges=nothing) =
          new(ipProtocol, fromPort, toPort, groups, ipRanges)
 end
 function IpPermissionType(pd::ETree)
@@ -6661,7 +7186,7 @@ type DescribeVolumesResponseType
     requestId::Union(ASCIIString, Nothing)
     volumeSet::Union(Vector{DescribeVolumesSetItemResponseType}, Nothing)
 
-    DescribeVolumesResponseType(; requestId=nothing, volumeSet=nothing) = 
+    DescribeVolumesResponseType(; requestId=nothing, volumeSet=nothing) =
          new(requestId, volumeSet)
 end
 function DescribeVolumesResponseType(pd::ETree)
@@ -6679,7 +7204,7 @@ type DescribeSpotPriceHistoryResponseType
     spotPriceHistorySet::Union(Vector{SpotPriceHistorySetItemType}, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeSpotPriceHistoryResponseType(; requestId=nothing, spotPriceHistorySet=nothing, nextToken=nothing) = 
+    DescribeSpotPriceHistoryResponseType(; requestId=nothing, spotPriceHistorySet=nothing, nextToken=nothing) =
          new(requestId, spotPriceHistorySet, nextToken)
 end
 function DescribeSpotPriceHistoryResponseType(pd::ETree)
@@ -6697,7 +7222,7 @@ type DescribeSpotInstanceRequestsType
     spotInstanceRequestIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeSpotInstanceRequestsType(; spotInstanceRequestIdSet=nothing, filterSet=nothing) = 
+    DescribeSpotInstanceRequestsType(; spotInstanceRequestIdSet=nothing, filterSet=nothing) =
          new(spotInstanceRequestIdSet, filterSet)
 end
 function DescribeSpotInstanceRequestsType(pd::ETree)
@@ -6714,7 +7239,7 @@ type CreateDhcpOptionsResponseType
     requestId::Union(ASCIIString, Nothing)
     dhcpOptions::Union(DhcpOptionsType, Nothing)
 
-    CreateDhcpOptionsResponseType(; requestId=nothing, dhcpOptions=nothing) = 
+    CreateDhcpOptionsResponseType(; requestId=nothing, dhcpOptions=nothing) =
          new(requestId, dhcpOptions)
 end
 function CreateDhcpOptionsResponseType(pd::ETree)
@@ -6731,7 +7256,7 @@ type DescribeRouteTablesType
     routeTableIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeRouteTablesType(; routeTableIdSet=nothing, filterSet=nothing) = 
+    DescribeRouteTablesType(; routeTableIdSet=nothing, filterSet=nothing) =
          new(routeTableIdSet, filterSet)
 end
 function DescribeRouteTablesType(pd::ETree)
@@ -6748,7 +7273,7 @@ type DescribeInternetGatewaysResponseType
     requestId::Union(ASCIIString, Nothing)
     internetGatewaySet::Union(Vector{InternetGatewayType}, Nothing)
 
-    DescribeInternetGatewaysResponseType(; requestId=nothing, internetGatewaySet=nothing) = 
+    DescribeInternetGatewaysResponseType(; requestId=nothing, internetGatewaySet=nothing) =
          new(requestId, internetGatewaySet)
 end
 function DescribeInternetGatewaysResponseType(pd::ETree)
@@ -6765,7 +7290,7 @@ type CreateInstanceExportTaskResponseType
     requestId::Union(ASCIIString, Nothing)
     exportTask::Union(ExportTaskResponseType, Nothing)
 
-    CreateInstanceExportTaskResponseType(; requestId=nothing, exportTask=nothing) = 
+    CreateInstanceExportTaskResponseType(; requestId=nothing, exportTask=nothing) =
          new(requestId, exportTask)
 end
 function CreateInstanceExportTaskResponseType(pd::ETree)
@@ -6785,7 +7310,7 @@ type CreateImageType
     noReboot::Union(Bool, Nothing)
     blockDeviceMapping::Union(Vector{BlockDeviceMappingItemType}, Nothing)
 
-    CreateImageType(; instanceId=nothing, name=nothing, description=nothing, noReboot=nothing, blockDeviceMapping=nothing) = 
+    CreateImageType(; instanceId=nothing, name=nothing, description=nothing, noReboot=nothing, blockDeviceMapping=nothing) =
          new(instanceId, name, description, noReboot, blockDeviceMapping)
 end
 function CreateImageType(pd::ETree)
@@ -6805,7 +7330,7 @@ type DescribeInternetGatewaysType
     internetGatewayIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeInternetGatewaysType(; internetGatewayIdSet=nothing, filterSet=nothing) = 
+    DescribeInternetGatewaysType(; internetGatewayIdSet=nothing, filterSet=nothing) =
          new(internetGatewayIdSet, filterSet)
 end
 function DescribeInternetGatewaysType(pd::ETree)
@@ -6823,7 +7348,7 @@ type InstanceStateChangeType
     currentState::Union(InstanceStateType, Nothing)
     previousState::Union(InstanceStateType, Nothing)
 
-    InstanceStateChangeType(; instanceId=nothing, currentState=nothing, previousState=nothing) = 
+    InstanceStateChangeType(; instanceId=nothing, currentState=nothing, previousState=nothing) =
          new(instanceId, currentState, previousState)
 end
 function InstanceStateChangeType(pd::ETree)
@@ -6842,7 +7367,7 @@ type PurchaseReservedInstancesOfferingType
     instanceCount::Union(Int64, Nothing)
     limitPrice::Union(ReservedInstanceLimitPriceType, Nothing)
 
-    PurchaseReservedInstancesOfferingType(; reservedInstancesOfferingId=nothing, instanceCount=nothing, limitPrice=nothing) = 
+    PurchaseReservedInstancesOfferingType(; reservedInstancesOfferingId=nothing, instanceCount=nothing, limitPrice=nothing) =
          new(reservedInstancesOfferingId, instanceCount, limitPrice)
 end
 function PurchaseReservedInstancesOfferingType(pd::ETree)
@@ -6864,7 +7389,7 @@ type RouteTableType
     propagatingVgwSet::Union(Vector{ASCIIString}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    RouteTableType(; routeTableId=nothing, vpcId=nothing, routeSet=nothing, associationSet=nothing, propagatingVgwSet=nothing, tagSet=nothing) = 
+    RouteTableType(; routeTableId=nothing, vpcId=nothing, routeSet=nothing, associationSet=nothing, propagatingVgwSet=nothing, tagSet=nothing) =
          new(routeTableId, vpcId, routeSet, associationSet, propagatingVgwSet, tagSet)
 end
 function RouteTableType(pd::ETree)
@@ -6885,7 +7410,7 @@ type DescribeVpnConnectionsType
     vpnConnectionSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeVpnConnectionsType(; vpnConnectionSet=nothing, filterSet=nothing) = 
+    DescribeVpnConnectionsType(; vpnConnectionSet=nothing, filterSet=nothing) =
          new(vpnConnectionSet, filterSet)
 end
 function DescribeVpnConnectionsType(pd::ETree)
@@ -6906,7 +7431,7 @@ type CreateNetworkInterfaceType
     privateIpAddressesSet::Union(Vector{PrivateIpAddressesSetItemRequestType}, Nothing)
     secondaryPrivateIpAddressCount::Union(Int64, Nothing)
 
-    CreateNetworkInterfaceType(; subnetId=nothing, description=nothing, privateIpAddress=nothing, groupSet=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing) = 
+    CreateNetworkInterfaceType(; subnetId=nothing, description=nothing, privateIpAddress=nothing, groupSet=nothing, privateIpAddressesSet=nothing, secondaryPrivateIpAddressCount=nothing) =
          new(subnetId, description, privateIpAddress, groupSet, privateIpAddressesSet, secondaryPrivateIpAddressCount)
 end
 function CreateNetworkInterfaceType(pd::ETree)
@@ -6927,7 +7452,7 @@ type DescribeVpcsResponseType
     requestId::Union(ASCIIString, Nothing)
     vpcSet::Union(Vector{VpcType}, Nothing)
 
-    DescribeVpcsResponseType(; requestId=nothing, vpcSet=nothing) = 
+    DescribeVpcsResponseType(; requestId=nothing, vpcSet=nothing) =
          new(requestId, vpcSet)
 end
 function DescribeVpcsResponseType(pd::ETree)
@@ -6952,7 +7477,7 @@ type DescribeReservedInstancesListingsResponseSetItemType
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
     clientToken::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesListingsResponseSetItemType(; reservedInstancesListingId=nothing, reservedInstancesId=nothing, createDate=nothing, updateDate=nothing, status=nothing, statusMessage=nothing, instanceCounts=nothing, priceSchedules=nothing, tagSet=nothing, clientToken=nothing) = 
+    DescribeReservedInstancesListingsResponseSetItemType(; reservedInstancesListingId=nothing, reservedInstancesId=nothing, createDate=nothing, updateDate=nothing, status=nothing, statusMessage=nothing, instanceCounts=nothing, priceSchedules=nothing, tagSet=nothing, clientToken=nothing) =
          new(reservedInstancesListingId, reservedInstancesId, createDate, updateDate, status, statusMessage, instanceCounts, priceSchedules, tagSet, clientToken)
 end
 function DescribeReservedInstancesListingsResponseSetItemType(pd::ETree)
@@ -6977,7 +7502,7 @@ type DescribeVpcsType
     vpcSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeVpcsType(; vpcSet=nothing, filterSet=nothing) = 
+    DescribeVpcsType(; vpcSet=nothing, filterSet=nothing) =
          new(vpcSet, filterSet)
 end
 function DescribeVpcsType(pd::ETree)
@@ -6994,7 +7519,7 @@ type DescribeDhcpOptionsResponseType
     requestId::Union(ASCIIString, Nothing)
     dhcpOptionsSet::Union(Vector{DhcpOptionsType}, Nothing)
 
-    DescribeDhcpOptionsResponseType(; requestId=nothing, dhcpOptionsSet=nothing) = 
+    DescribeDhcpOptionsResponseType(; requestId=nothing, dhcpOptionsSet=nothing) =
          new(requestId, dhcpOptionsSet)
 end
 function DescribeDhcpOptionsResponseType(pd::ETree)
@@ -7010,7 +7535,7 @@ export DescribeDhcpOptionsResponseType
 type DescribeTagsType
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeTagsType(; filterSet=nothing) = 
+    DescribeTagsType(; filterSet=nothing) =
          new(filterSet)
 end
 function DescribeTagsType(pd::ETree)
@@ -7026,7 +7551,7 @@ type MonitorInstancesResponseSetItemType
     instanceId::Union(ASCIIString, Nothing)
     monitoring::Union(InstanceMonitoringStateType, Nothing)
 
-    MonitorInstancesResponseSetItemType(; instanceId=nothing, monitoring=nothing) = 
+    MonitorInstancesResponseSetItemType(; instanceId=nothing, monitoring=nothing) =
          new(instanceId, monitoring)
 end
 function MonitorInstancesResponseSetItemType(pd::ETree)
@@ -7043,7 +7568,7 @@ type DescribeRouteTablesResponseType
     requestId::Union(ASCIIString, Nothing)
     routeTableSet::Union(Vector{RouteTableType}, Nothing)
 
-    DescribeRouteTablesResponseType(; requestId=nothing, routeTableSet=nothing) = 
+    DescribeRouteTablesResponseType(; requestId=nothing, routeTableSet=nothing) =
          new(requestId, routeTableSet)
 end
 function DescribeRouteTablesResponseType(pd::ETree)
@@ -7060,7 +7585,7 @@ type DescribeAccountAttributesType
     accountAttributeNameSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeAccountAttributesType(; accountAttributeNameSet=nothing, filterSet=nothing) = 
+    DescribeAccountAttributesType(; accountAttributeNameSet=nothing, filterSet=nothing) =
          new(accountAttributeNameSet, filterSet)
 end
 function DescribeAccountAttributesType(pd::ETree)
@@ -7078,7 +7603,7 @@ type DescribeInstanceStatusResponseType
     instanceStatusSet::Union(Vector{InstanceStatusItemType}, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeInstanceStatusResponseType(; requestId=nothing, instanceStatusSet=nothing, nextToken=nothing) = 
+    DescribeInstanceStatusResponseType(; requestId=nothing, instanceStatusSet=nothing, nextToken=nothing) =
          new(requestId, instanceStatusSet, nextToken)
 end
 function DescribeInstanceStatusResponseType(pd::ETree)
@@ -7100,7 +7625,7 @@ type VpnGatewayType
     attachments::Union(Vector{AttachmentType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    VpnGatewayType(; vpnGatewayId=nothing, state=nothing, _type=nothing, availabilityZone=nothing, attachments=nothing, tagSet=nothing) = 
+    VpnGatewayType(; vpnGatewayId=nothing, state=nothing, _type=nothing, availabilityZone=nothing, attachments=nothing, tagSet=nothing) =
          new(vpnGatewayId, state, _type, availabilityZone, attachments, tagSet)
 end
 function VpnGatewayType(pd::ETree)
@@ -7121,7 +7646,7 @@ type DescribeKeyPairsType
     keySet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeKeyPairsType(; keySet=nothing, filterSet=nothing) = 
+    DescribeKeyPairsType(; keySet=nothing, filterSet=nothing) =
          new(keySet, filterSet)
 end
 function DescribeKeyPairsType(pd::ETree)
@@ -7138,7 +7663,7 @@ type BundleInstanceType
     instanceId::Union(ASCIIString, Nothing)
     storage::Union(BundleInstanceTaskStorageType, Nothing)
 
-    BundleInstanceType(; instanceId=nothing, storage=nothing) = 
+    BundleInstanceType(; instanceId=nothing, storage=nothing) =
          new(instanceId, storage)
 end
 function BundleInstanceType(pd::ETree)
@@ -7157,7 +7682,7 @@ type InstancePrivateIpAddressesSetItemType
     primary::Union(Bool, Nothing)
     association::Union(InstanceNetworkInterfaceAssociationType, Nothing)
 
-    InstancePrivateIpAddressesSetItemType(; privateIpAddress=nothing, privateDnsName=nothing, primary=nothing, association=nothing) = 
+    InstancePrivateIpAddressesSetItemType(; privateIpAddress=nothing, privateDnsName=nothing, primary=nothing, association=nothing) =
          new(privateIpAddress, privateDnsName, primary, association)
 end
 function InstancePrivateIpAddressesSetItemType(pd::ETree)
@@ -7183,7 +7708,7 @@ type ImportInstanceLaunchSpecificationType
     instanceInitiatedShutdownBehavior::Union(ASCIIString, Nothing)
     privateIpAddress::Union(ASCIIString, Nothing)
 
-    ImportInstanceLaunchSpecificationType(; architecture=nothing, groupSet=nothing, userData=nothing, instanceType=nothing, placement=nothing, monitoring=nothing, subnetId=nothing, instanceInitiatedShutdownBehavior=nothing, privateIpAddress=nothing) = 
+    ImportInstanceLaunchSpecificationType(; architecture=nothing, groupSet=nothing, userData=nothing, instanceType=nothing, placement=nothing, monitoring=nothing, subnetId=nothing, instanceInitiatedShutdownBehavior=nothing, privateIpAddress=nothing) =
          new(architecture, groupSet, userData, instanceType, placement, monitoring, subnetId, instanceInitiatedShutdownBehavior, privateIpAddress)
 end
 function ImportInstanceLaunchSpecificationType(pd::ETree)
@@ -7208,7 +7733,7 @@ type DescribeAddressesType
     allocationIdsSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeAddressesType(; publicIpsSet=nothing, allocationIdsSet=nothing, filterSet=nothing) = 
+    DescribeAddressesType(; publicIpsSet=nothing, allocationIdsSet=nothing, filterSet=nothing) =
          new(publicIpsSet, allocationIdsSet, filterSet)
 end
 function DescribeAddressesType(pd::ETree)
@@ -7226,7 +7751,7 @@ type VolumeStatusInfoType
     status::Union(ASCIIString, Nothing)
     details::Union(Vector{VolumeStatusDetailsItemType}, Nothing)
 
-    VolumeStatusInfoType(; status=nothing, details=nothing) = 
+    VolumeStatusInfoType(; status=nothing, details=nothing) =
          new(status, details)
 end
 function VolumeStatusInfoType(pd::ETree)
@@ -7243,7 +7768,7 @@ type StartInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     instancesSet::Union(Vector{InstanceStateChangeType}, Nothing)
 
-    StartInstancesResponseType(; requestId=nothing, instancesSet=nothing) = 
+    StartInstancesResponseType(; requestId=nothing, instancesSet=nothing) =
          new(requestId, instancesSet)
 end
 function StartInstancesResponseType(pd::ETree)
@@ -7262,7 +7787,7 @@ type CreateVpnConnectionType
     vpnGatewayId::Union(ASCIIString, Nothing)
     options::Union(VpnConnectionOptionsRequestType, Nothing)
 
-    CreateVpnConnectionType(; _type=nothing, customerGatewayId=nothing, vpnGatewayId=nothing, options=nothing) = 
+    CreateVpnConnectionType(; _type=nothing, customerGatewayId=nothing, vpnGatewayId=nothing, options=nothing) =
          new(_type, customerGatewayId, vpnGatewayId, options)
 end
 function CreateVpnConnectionType(pd::ETree)
@@ -7281,7 +7806,7 @@ type AuthorizeSecurityGroupEgressType
     groupId::Union(ASCIIString, Nothing)
     ipPermissions::Union(Vector{IpPermissionType}, Nothing)
 
-    AuthorizeSecurityGroupEgressType(; groupId=nothing, ipPermissions=nothing) = 
+    AuthorizeSecurityGroupEgressType(; groupId=nothing, ipPermissions=nothing) =
          new(groupId, ipPermissions)
 end
 function AuthorizeSecurityGroupEgressType(pd::ETree)
@@ -7298,7 +7823,7 @@ type CreateReservedInstancesListingResponseType
     requestId::Union(ASCIIString, Nothing)
     reservedInstancesListingsSet::Union(Vector{DescribeReservedInstancesListingsResponseSetItemType}, Nothing)
 
-    CreateReservedInstancesListingResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) = 
+    CreateReservedInstancesListingResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) =
          new(requestId, reservedInstancesListingsSet)
 end
 function CreateReservedInstancesListingResponseType(pd::ETree)
@@ -7319,7 +7844,7 @@ type NetworkAclType
     associationSet::Union(Vector{NetworkAclAssociationType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    NetworkAclType(; networkAclId=nothing, vpcId=nothing, default=nothing, entrySet=nothing, associationSet=nothing, tagSet=nothing) = 
+    NetworkAclType(; networkAclId=nothing, vpcId=nothing, default=nothing, entrySet=nothing, associationSet=nothing, tagSet=nothing) =
          new(networkAclId, vpcId, default, entrySet, associationSet, tagSet)
 end
 function NetworkAclType(pd::ETree)
@@ -7340,7 +7865,7 @@ type DescribeAddressesResponseType
     requestId::Union(ASCIIString, Nothing)
     addressesSet::Union(Vector{DescribeAddressesResponseItemType}, Nothing)
 
-    DescribeAddressesResponseType(; requestId=nothing, addressesSet=nothing) = 
+    DescribeAddressesResponseType(; requestId=nothing, addressesSet=nothing) =
          new(requestId, addressesSet)
 end
 function DescribeAddressesResponseType(pd::ETree)
@@ -7357,7 +7882,7 @@ type TerminateInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     instancesSet::Union(Vector{InstanceStateChangeType}, Nothing)
 
-    TerminateInstancesResponseType(; requestId=nothing, instancesSet=nothing) = 
+    TerminateInstancesResponseType(; requestId=nothing, instancesSet=nothing) =
          new(requestId, instancesSet)
 end
 function TerminateInstancesResponseType(pd::ETree)
@@ -7375,7 +7900,7 @@ type DiskImageType
     description::Union(ASCIIString, Nothing)
     volume::Union(DiskImageVolumeType, Nothing)
 
-    DiskImageType(; image=nothing, description=nothing, volume=nothing) = 
+    DiskImageType(; image=nothing, description=nothing, volume=nothing) =
          new(image, description, volume)
 end
 function DiskImageType(pd::ETree)
@@ -7414,7 +7939,7 @@ type RunInstancesType
     iamInstanceProfile::Union(IamInstanceProfileRequestType, Nothing)
     ebsOptimized::Union(Bool, Nothing)
 
-    RunInstancesType(; imageId=nothing, minCount=nothing, maxCount=nothing, keyName=nothing, groupSet=nothing, additionalInfo=nothing, userData=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, disableApiTermination=nothing, instanceInitiatedShutdownBehavior=nothing, license=nothing, privateIpAddress=nothing, clientToken=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) = 
+    RunInstancesType(; imageId=nothing, minCount=nothing, maxCount=nothing, keyName=nothing, groupSet=nothing, additionalInfo=nothing, userData=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, disableApiTermination=nothing, instanceInitiatedShutdownBehavior=nothing, license=nothing, privateIpAddress=nothing, clientToken=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) =
          new(imageId, minCount, maxCount, keyName, groupSet, additionalInfo, userData, addressingType, instanceType, placement, kernelId, ramdiskId, blockDeviceMapping, monitoring, subnetId, disableApiTermination, instanceInitiatedShutdownBehavior, license, privateIpAddress, clientToken, networkInterfaceSet, iamInstanceProfile, ebsOptimized)
 end
 function RunInstancesType(pd::ETree)
@@ -7452,7 +7977,7 @@ type DescribeAvailabilityZonesType
     availabilityZoneSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeAvailabilityZonesType(; availabilityZoneSet=nothing, filterSet=nothing) = 
+    DescribeAvailabilityZonesType(; availabilityZoneSet=nothing, filterSet=nothing) =
          new(availabilityZoneSet, filterSet)
 end
 function DescribeAvailabilityZonesType(pd::ETree)
@@ -7469,7 +7994,7 @@ type CreateVolumePermissionOperationType
     add::Union(Vector{CreateVolumePermissionItemType}, Nothing)
     remove::Union(Vector{CreateVolumePermissionItemType}, Nothing)
 
-    CreateVolumePermissionOperationType(; add=nothing, remove=nothing) = 
+    CreateVolumePermissionOperationType(; add=nothing, remove=nothing) =
          new(add, remove)
 end
 function CreateVolumePermissionOperationType(pd::ETree)
@@ -7498,7 +8023,7 @@ type InstanceNetworkInterfaceSetItemType
     association::Union(InstanceNetworkInterfaceAssociationType, Nothing)
     privateIpAddressesSet::Union(Vector{InstancePrivateIpAddressesSetItemType}, Nothing)
 
-    InstanceNetworkInterfaceSetItemType(; networkInterfaceId=nothing, subnetId=nothing, vpcId=nothing, description=nothing, ownerId=nothing, status=nothing, macAddress=nothing, privateIpAddress=nothing, privateDnsName=nothing, sourceDestCheck=nothing, groupSet=nothing, attachment=nothing, association=nothing, privateIpAddressesSet=nothing) = 
+    InstanceNetworkInterfaceSetItemType(; networkInterfaceId=nothing, subnetId=nothing, vpcId=nothing, description=nothing, ownerId=nothing, status=nothing, macAddress=nothing, privateIpAddress=nothing, privateDnsName=nothing, sourceDestCheck=nothing, groupSet=nothing, attachment=nothing, association=nothing, privateIpAddressesSet=nothing) =
          new(networkInterfaceId, subnetId, vpcId, description, ownerId, status, macAddress, privateIpAddress, privateDnsName, sourceDestCheck, groupSet, attachment, association, privateIpAddressesSet)
 end
 function InstanceNetworkInterfaceSetItemType(pd::ETree)
@@ -7530,7 +8055,7 @@ type LicenseSetItemType
     capacitySet::Union(Vector{LicenseCapacitySetItemType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    LicenseSetItemType(; licenseId=nothing, _type=nothing, pool=nothing, capacitySet=nothing, tagSet=nothing) = 
+    LicenseSetItemType(; licenseId=nothing, _type=nothing, pool=nothing, capacitySet=nothing, tagSet=nothing) =
          new(licenseId, _type, pool, capacitySet, tagSet)
 end
 function LicenseSetItemType(pd::ETree)
@@ -7553,7 +8078,7 @@ type ImportVolumeTaskDetailsType
     image::Union(DiskImageDescriptionType, Nothing)
     volume::Union(DiskImageVolumeDescriptionType, Nothing)
 
-    ImportVolumeTaskDetailsType(; bytesConverted=nothing, availabilityZone=nothing, description=nothing, image=nothing, volume=nothing) = 
+    ImportVolumeTaskDetailsType(; bytesConverted=nothing, availabilityZone=nothing, description=nothing, image=nothing, volume=nothing) =
          new(bytesConverted, availabilityZone, description, image, volume)
 end
 function ImportVolumeTaskDetailsType(pd::ETree)
@@ -7573,7 +8098,7 @@ type DescribeReservedInstancesListingsResponseType
     requestId::Union(ASCIIString, Nothing)
     reservedInstancesListingsSet::Union(Vector{DescribeReservedInstancesListingsResponseSetItemType}, Nothing)
 
-    DescribeReservedInstancesListingsResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) = 
+    DescribeReservedInstancesListingsResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) =
          new(requestId, reservedInstancesListingsSet)
 end
 function DescribeReservedInstancesListingsResponseType(pd::ETree)
@@ -7590,7 +8115,7 @@ type RevokeSecurityGroupIngressType
     userId::Union(ASCIIString, Nothing)
     ipPermissions::Union(Vector{IpPermissionType}, Nothing)
 
-    RevokeSecurityGroupIngressType(; userId=nothing, ipPermissions=nothing) = 
+    RevokeSecurityGroupIngressType(; userId=nothing, ipPermissions=nothing) =
          new(userId, ipPermissions)
 end
 function RevokeSecurityGroupIngressType(pd::ETree)
@@ -7607,7 +8132,7 @@ type StopInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     instancesSet::Union(Vector{InstanceStateChangeType}, Nothing)
 
-    StopInstancesResponseType(; requestId=nothing, instancesSet=nothing) = 
+    StopInstancesResponseType(; requestId=nothing, instancesSet=nothing) =
          new(requestId, instancesSet)
 end
 function StopInstancesResponseType(pd::ETree)
@@ -7626,7 +8151,7 @@ type ImportVolumeType
     description::Union(ASCIIString, Nothing)
     volume::Union(DiskImageVolumeType, Nothing)
 
-    ImportVolumeType(; availabilityZone=nothing, image=nothing, description=nothing, volume=nothing) = 
+    ImportVolumeType(; availabilityZone=nothing, image=nothing, description=nothing, volume=nothing) =
          new(availabilityZone, image, description, volume)
 end
 function ImportVolumeType(pd::ETree)
@@ -7653,7 +8178,7 @@ type VpnConnectionType
     options::Union(VpnConnectionOptionsResponseType, Nothing)
     routes::Union(Vector{VpnStaticRouteType}, Nothing)
 
-    VpnConnectionType(; vpnConnectionId=nothing, state=nothing, customerGatewayConfiguration=nothing, _type=nothing, customerGatewayId=nothing, vpnGatewayId=nothing, tagSet=nothing, vgwTelemetry=nothing, options=nothing, routes=nothing) = 
+    VpnConnectionType(; vpnConnectionId=nothing, state=nothing, customerGatewayConfiguration=nothing, _type=nothing, customerGatewayId=nothing, vpnGatewayId=nothing, tagSet=nothing, vgwTelemetry=nothing, options=nothing, routes=nothing) =
          new(vpnConnectionId, state, customerGatewayConfiguration, _type, customerGatewayId, vpnGatewayId, tagSet, vgwTelemetry, options, routes)
 end
 function VpnConnectionType(pd::ETree)
@@ -7678,7 +8203,7 @@ type DescribeInstancesType
     instancesSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeInstancesType(; instancesSet=nothing, filterSet=nothing) = 
+    DescribeInstancesType(; instancesSet=nothing, filterSet=nothing) =
          new(instancesSet, filterSet)
 end
 function DescribeInstancesType(pd::ETree)
@@ -7695,7 +8220,7 @@ type DescribeImagesResponseType
     requestId::Union(ASCIIString, Nothing)
     imagesSet::Union(Vector{DescribeImagesResponseItemType}, Nothing)
 
-    DescribeImagesResponseType(; requestId=nothing, imagesSet=nothing) = 
+    DescribeImagesResponseType(; requestId=nothing, imagesSet=nothing) =
          new(requestId, imagesSet)
 end
 function DescribeImagesResponseType(pd::ETree)
@@ -7716,7 +8241,7 @@ type CustomerGatewayType
     bgpAsn::Union(Int64, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    CustomerGatewayType(; customerGatewayId=nothing, state=nothing, _type=nothing, ipAddress=nothing, bgpAsn=nothing, tagSet=nothing) = 
+    CustomerGatewayType(; customerGatewayId=nothing, state=nothing, _type=nothing, ipAddress=nothing, bgpAsn=nothing, tagSet=nothing) =
          new(customerGatewayId, state, _type, ipAddress, bgpAsn, tagSet)
 end
 function CustomerGatewayType(pd::ETree)
@@ -7744,7 +8269,7 @@ type SubnetType
     mapPublicIpOnLaunch::Union(Bool, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    SubnetType(; subnetId=nothing, state=nothing, vpcId=nothing, cidrBlock=nothing, availableIpAddressCount=nothing, availabilityZone=nothing, defaultForAz=nothing, mapPublicIpOnLaunch=nothing, tagSet=nothing) = 
+    SubnetType(; subnetId=nothing, state=nothing, vpcId=nothing, cidrBlock=nothing, availableIpAddressCount=nothing, availabilityZone=nothing, defaultForAz=nothing, mapPublicIpOnLaunch=nothing, tagSet=nothing) =
          new(subnetId, state, vpcId, cidrBlock, availableIpAddressCount, availabilityZone, defaultForAz, mapPublicIpOnLaunch, tagSet)
 end
 function SubnetType(pd::ETree)
@@ -7768,7 +8293,7 @@ type DescribeLicensesResponseType
     requestId::Union(ASCIIString, Nothing)
     licenseSet::Union(Vector{LicenseSetItemType}, Nothing)
 
-    DescribeLicensesResponseType(; requestId=nothing, licenseSet=nothing) = 
+    DescribeLicensesResponseType(; requestId=nothing, licenseSet=nothing) =
          new(requestId, licenseSet)
 end
 function DescribeLicensesResponseType(pd::ETree)
@@ -7787,7 +8312,7 @@ type NetworkInterfacePrivateIpAddressesSetItemType
     primary::Union(Bool, Nothing)
     association::Union(NetworkInterfaceAssociationType, Nothing)
 
-    NetworkInterfacePrivateIpAddressesSetItemType(; privateIpAddress=nothing, privateDnsName=nothing, primary=nothing, association=nothing) = 
+    NetworkInterfacePrivateIpAddressesSetItemType(; privateIpAddress=nothing, privateDnsName=nothing, primary=nothing, association=nothing) =
          new(privateIpAddress, privateDnsName, primary, association)
 end
 function NetworkInterfacePrivateIpAddressesSetItemType(pd::ETree)
@@ -7806,7 +8331,7 @@ type CreateVpnConnectionResponseType
     requestId::Union(ASCIIString, Nothing)
     vpnConnection::Union(VpnConnectionType, Nothing)
 
-    CreateVpnConnectionResponseType(; requestId=nothing, vpnConnection=nothing) = 
+    CreateVpnConnectionResponseType(; requestId=nothing, vpnConnection=nothing) =
          new(requestId, vpnConnection)
 end
 function CreateVpnConnectionResponseType(pd::ETree)
@@ -7823,7 +8348,7 @@ type DescribeTagsResponseType
     requestId::Union(ASCIIString, Nothing)
     tagSet::Union(Vector{TagSetItemType}, Nothing)
 
-    DescribeTagsResponseType(; requestId=nothing, tagSet=nothing) = 
+    DescribeTagsResponseType(; requestId=nothing, tagSet=nothing) =
          new(requestId, tagSet)
 end
 function DescribeTagsResponseType(pd::ETree)
@@ -7840,7 +8365,7 @@ type CreateInternetGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     internetGateway::Union(InternetGatewayType, Nothing)
 
-    CreateInternetGatewayResponseType(; requestId=nothing, internetGateway=nothing) = 
+    CreateInternetGatewayResponseType(; requestId=nothing, internetGateway=nothing) =
          new(requestId, internetGateway)
 end
 function CreateInternetGatewayResponseType(pd::ETree)
@@ -7857,7 +8382,7 @@ type AttachVpnGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     attachment::Union(AttachmentType, Nothing)
 
-    AttachVpnGatewayResponseType(; requestId=nothing, attachment=nothing) = 
+    AttachVpnGatewayResponseType(; requestId=nothing, attachment=nothing) =
          new(requestId, attachment)
 end
 function AttachVpnGatewayResponseType(pd::ETree)
@@ -7874,7 +8399,7 @@ type DescribeLicensesType
     licenseIdSet::Union(Vector{ASCIIString}, Nothing)
     filterSet::Union(Vector{FilterType}, Nothing)
 
-    DescribeLicensesType(; licenseIdSet=nothing, filterSet=nothing) = 
+    DescribeLicensesType(; licenseIdSet=nothing, filterSet=nothing) =
          new(licenseIdSet, filterSet)
 end
 function DescribeLicensesType(pd::ETree)
@@ -7891,7 +8416,7 @@ type AuthorizeSecurityGroupIngressType
     userId::Union(ASCIIString, Nothing)
     ipPermissions::Union(Vector{IpPermissionType}, Nothing)
 
-    AuthorizeSecurityGroupIngressType(; userId=nothing, ipPermissions=nothing) = 
+    AuthorizeSecurityGroupIngressType(; userId=nothing, ipPermissions=nothing) =
          new(userId, ipPermissions)
 end
 function AuthorizeSecurityGroupIngressType(pd::ETree)
@@ -7908,7 +8433,7 @@ type CreateSubnetResponseType
     requestId::Union(ASCIIString, Nothing)
     subnet::Union(SubnetType, Nothing)
 
-    CreateSubnetResponseType(; requestId=nothing, subnet=nothing) = 
+    CreateSubnetResponseType(; requestId=nothing, subnet=nothing) =
          new(requestId, subnet)
 end
 function CreateSubnetResponseType(pd::ETree)
@@ -7941,7 +8466,7 @@ type NetworkInterfaceType
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
     privateIpAddressesSet::Union(Vector{NetworkInterfacePrivateIpAddressesSetItemType}, Nothing)
 
-    NetworkInterfaceType(; networkInterfaceId=nothing, subnetId=nothing, vpcId=nothing, availabilityZone=nothing, description=nothing, ownerId=nothing, requesterId=nothing, requesterManaged=nothing, status=nothing, macAddress=nothing, privateIpAddress=nothing, privateDnsName=nothing, sourceDestCheck=nothing, groupSet=nothing, attachment=nothing, association=nothing, tagSet=nothing, privateIpAddressesSet=nothing) = 
+    NetworkInterfaceType(; networkInterfaceId=nothing, subnetId=nothing, vpcId=nothing, availabilityZone=nothing, description=nothing, ownerId=nothing, requesterId=nothing, requesterManaged=nothing, status=nothing, macAddress=nothing, privateIpAddress=nothing, privateDnsName=nothing, sourceDestCheck=nothing, groupSet=nothing, attachment=nothing, association=nothing, tagSet=nothing, privateIpAddressesSet=nothing) =
          new(networkInterfaceId, subnetId, vpcId, availabilityZone, description, ownerId, requesterId, requesterManaged, status, macAddress, privateIpAddress, privateDnsName, sourceDestCheck, groupSet, attachment, association, tagSet, privateIpAddressesSet)
 end
 function NetworkInterfaceType(pd::ETree)
@@ -7974,7 +8499,7 @@ type ImportVolumeResponseType
     requestId::Union(ASCIIString, Nothing)
     conversionTask::Union(ConversionTaskType, Nothing)
 
-    ImportVolumeResponseType(; requestId=nothing, conversionTask=nothing) = 
+    ImportVolumeResponseType(; requestId=nothing, conversionTask=nothing) =
          new(requestId, conversionTask)
 end
 function ImportVolumeResponseType(pd::ETree)
@@ -7991,7 +8516,7 @@ type ModifySnapshotAttributeType
     snapshotId::Union(ASCIIString, Nothing)
     createVolumePermission::Union(CreateVolumePermissionOperationType, Nothing)
 
-    ModifySnapshotAttributeType(; snapshotId=nothing, createVolumePermission=nothing) = 
+    ModifySnapshotAttributeType(; snapshotId=nothing, createVolumePermission=nothing) =
          new(snapshotId, createVolumePermission)
 end
 function ModifySnapshotAttributeType(pd::ETree)
@@ -8008,7 +8533,7 @@ type CreateNetworkInterfaceResponseType
     requestId::Union(ASCIIString, Nothing)
     networkInterface::Union(NetworkInterfaceType, Nothing)
 
-    CreateNetworkInterfaceResponseType(; requestId=nothing, networkInterface=nothing) = 
+    CreateNetworkInterfaceResponseType(; requestId=nothing, networkInterface=nothing) =
          new(requestId, networkInterface)
 end
 function CreateNetworkInterfaceResponseType(pd::ETree)
@@ -8025,7 +8550,7 @@ type CancelReservedInstancesListingResponseType
     requestId::Union(ASCIIString, Nothing)
     reservedInstancesListingsSet::Union(Vector{DescribeReservedInstancesListingsResponseSetItemType}, Nothing)
 
-    CancelReservedInstancesListingResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) = 
+    CancelReservedInstancesListingResponseType(; requestId=nothing, reservedInstancesListingsSet=nothing) =
          new(requestId, reservedInstancesListingsSet)
 end
 function CancelReservedInstancesListingResponseType(pd::ETree)
@@ -8042,7 +8567,7 @@ type MonitorInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     instancesSet::Union(Vector{MonitorInstancesResponseSetItemType}, Nothing)
 
-    MonitorInstancesResponseType(; requestId=nothing, instancesSet=nothing) = 
+    MonitorInstancesResponseType(; requestId=nothing, instancesSet=nothing) =
          new(requestId, instancesSet)
 end
 function MonitorInstancesResponseType(pd::ETree)
@@ -8059,7 +8584,7 @@ type CreateCustomerGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     customerGateway::Union(CustomerGatewayType, Nothing)
 
-    CreateCustomerGatewayResponseType(; requestId=nothing, customerGateway=nothing) = 
+    CreateCustomerGatewayResponseType(; requestId=nothing, customerGateway=nothing) =
          new(requestId, customerGateway)
 end
 function CreateCustomerGatewayResponseType(pd::ETree)
@@ -8076,7 +8601,7 @@ type DescribeVpnConnectionsResponseType
     requestId::Union(ASCIIString, Nothing)
     vpnConnectionSet::Union(Vector{VpnConnectionType}, Nothing)
 
-    DescribeVpnConnectionsResponseType(; requestId=nothing, vpnConnectionSet=nothing) = 
+    DescribeVpnConnectionsResponseType(; requestId=nothing, vpnConnectionSet=nothing) =
          new(requestId, vpnConnectionSet)
 end
 function DescribeVpnConnectionsResponseType(pd::ETree)
@@ -8128,7 +8653,7 @@ type RunningInstancesItemType
     iamInstanceProfile::Union(IamInstanceProfileResponseType, Nothing)
     ebsOptimized::Union(Bool, Nothing)
 
-    RunningInstancesItemType(; instanceId=nothing, imageId=nothing, instanceState=nothing, privateDnsName=nothing, dnsName=nothing, reason=nothing, keyName=nothing, amiLaunchIndex=nothing, productCodes=nothing, instanceType=nothing, launchTime=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, platform=nothing, monitoring=nothing, subnetId=nothing, vpcId=nothing, privateIpAddress=nothing, ipAddress=nothing, sourceDestCheck=nothing, groupSet=nothing, stateReason=nothing, architecture=nothing, rootDeviceType=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing, instanceLifecycle=nothing, spotInstanceRequestId=nothing, license=nothing, virtualizationType=nothing, clientToken=nothing, tagSet=nothing, hypervisor=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) = 
+    RunningInstancesItemType(; instanceId=nothing, imageId=nothing, instanceState=nothing, privateDnsName=nothing, dnsName=nothing, reason=nothing, keyName=nothing, amiLaunchIndex=nothing, productCodes=nothing, instanceType=nothing, launchTime=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, platform=nothing, monitoring=nothing, subnetId=nothing, vpcId=nothing, privateIpAddress=nothing, ipAddress=nothing, sourceDestCheck=nothing, groupSet=nothing, stateReason=nothing, architecture=nothing, rootDeviceType=nothing, rootDeviceName=nothing, blockDeviceMapping=nothing, instanceLifecycle=nothing, spotInstanceRequestId=nothing, license=nothing, virtualizationType=nothing, clientToken=nothing, tagSet=nothing, hypervisor=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) =
          new(instanceId, imageId, instanceState, privateDnsName, dnsName, reason, keyName, amiLaunchIndex, productCodes, instanceType, launchTime, placement, kernelId, ramdiskId, platform, monitoring, subnetId, vpcId, privateIpAddress, ipAddress, sourceDestCheck, groupSet, stateReason, architecture, rootDeviceType, rootDeviceName, blockDeviceMapping, instanceLifecycle, spotInstanceRequestId, license, virtualizationType, clientToken, tagSet, hypervisor, networkInterfaceSet, iamInstanceProfile, ebsOptimized)
 end
 function RunningInstancesItemType(pd::ETree)
@@ -8180,7 +8705,7 @@ type DescribeSnapshotsResponseType
     requestId::Union(ASCIIString, Nothing)
     snapshotSet::Union(Vector{DescribeSnapshotsSetItemResponseType}, Nothing)
 
-    DescribeSnapshotsResponseType(; requestId=nothing, snapshotSet=nothing) = 
+    DescribeSnapshotsResponseType(; requestId=nothing, snapshotSet=nothing) =
          new(requestId, snapshotSet)
 end
 function DescribeSnapshotsResponseType(pd::ETree)
@@ -8197,7 +8722,7 @@ type CreateVpcResponseType
     requestId::Union(ASCIIString, Nothing)
     vpc::Union(VpcType, Nothing)
 
-    CreateVpcResponseType(; requestId=nothing, vpc=nothing) = 
+    CreateVpcResponseType(; requestId=nothing, vpc=nothing) =
          new(requestId, vpc)
 end
 function CreateVpcResponseType(pd::ETree)
@@ -8217,7 +8742,7 @@ type ImportInstanceType
     keepPartialImports::Union(Bool, Nothing)
     platform::Union(ASCIIString, Nothing)
 
-    ImportInstanceType(; description=nothing, launchSpecification=nothing, diskImageSet=nothing, keepPartialImports=nothing, platform=nothing) = 
+    ImportInstanceType(; description=nothing, launchSpecification=nothing, diskImageSet=nothing, keepPartialImports=nothing, platform=nothing) =
          new(description, launchSpecification, diskImageSet, keepPartialImports, platform)
 end
 function ImportInstanceType(pd::ETree)
@@ -8243,7 +8768,7 @@ type BundleInstanceTaskType
     progress::Union(ASCIIString, Nothing)
     error::Union(BundleInstanceTaskErrorType, Nothing)
 
-    BundleInstanceTaskType(; instanceId=nothing, bundleId=nothing, state=nothing, startTime=nothing, updateTime=nothing, storage=nothing, progress=nothing, error=nothing) = 
+    BundleInstanceTaskType(; instanceId=nothing, bundleId=nothing, state=nothing, startTime=nothing, updateTime=nothing, storage=nothing, progress=nothing, error=nothing) =
          new(instanceId, bundleId, state, startTime, updateTime, storage, progress, error)
 end
 function BundleInstanceTaskType(pd::ETree)
@@ -8266,7 +8791,7 @@ type CancelBundleTaskResponseType
     requestId::Union(ASCIIString, Nothing)
     bundleInstanceTask::Union(BundleInstanceTaskType, Nothing)
 
-    CancelBundleTaskResponseType(; requestId=nothing, bundleInstanceTask=nothing) = 
+    CancelBundleTaskResponseType(; requestId=nothing, bundleInstanceTask=nothing) =
          new(requestId, bundleInstanceTask)
 end
 function CancelBundleTaskResponseType(pd::ETree)
@@ -8295,7 +8820,7 @@ type LaunchSpecificationResponseType
     iamInstanceProfile::Union(IamInstanceProfileRequestType, Nothing)
     ebsOptimized::Union(Bool, Nothing)
 
-    LaunchSpecificationResponseType(; imageId=nothing, keyName=nothing, groupSet=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) = 
+    LaunchSpecificationResponseType(; imageId=nothing, keyName=nothing, groupSet=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) =
          new(imageId, keyName, groupSet, addressingType, instanceType, placement, kernelId, ramdiskId, blockDeviceMapping, monitoring, subnetId, networkInterfaceSet, iamInstanceProfile, ebsOptimized)
 end
 function LaunchSpecificationResponseType(pd::ETree)
@@ -8330,7 +8855,7 @@ type SecurityGroupItemType
     ipPermissionsEgress::Union(Vector{IpPermissionType}, Nothing)
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
 
-    SecurityGroupItemType(; ownerId=nothing, groupId=nothing, groupName=nothing, groupDescription=nothing, vpcId=nothing, ipPermissions=nothing, ipPermissionsEgress=nothing, tagSet=nothing) = 
+    SecurityGroupItemType(; ownerId=nothing, groupId=nothing, groupName=nothing, groupDescription=nothing, vpcId=nothing, ipPermissions=nothing, ipPermissionsEgress=nothing, tagSet=nothing) =
          new(ownerId, groupId, groupName, groupDescription, vpcId, ipPermissions, ipPermissionsEgress, tagSet)
 end
 function SecurityGroupItemType(pd::ETree)
@@ -8353,7 +8878,7 @@ type CreateNetworkAclResponseType
     requestId::Union(ASCIIString, Nothing)
     networkAcl::Union(NetworkAclType, Nothing)
 
-    CreateNetworkAclResponseType(; requestId=nothing, networkAcl=nothing) = 
+    CreateNetworkAclResponseType(; requestId=nothing, networkAcl=nothing) =
          new(requestId, networkAcl)
 end
 function CreateNetworkAclResponseType(pd::ETree)
@@ -8370,7 +8895,7 @@ type CreateVpnGatewayResponseType
     requestId::Union(ASCIIString, Nothing)
     vpnGateway::Union(VpnGatewayType, Nothing)
 
-    CreateVpnGatewayResponseType(; requestId=nothing, vpnGateway=nothing) = 
+    CreateVpnGatewayResponseType(; requestId=nothing, vpnGateway=nothing) =
          new(requestId, vpnGateway)
 end
 function CreateVpnGatewayResponseType(pd::ETree)
@@ -8391,7 +8916,7 @@ type RunInstancesResponseType
     instancesSet::Union(Vector{RunningInstancesItemType}, Nothing)
     requesterId::Union(ASCIIString, Nothing)
 
-    RunInstancesResponseType(; requestId=nothing, reservationId=nothing, ownerId=nothing, groupSet=nothing, instancesSet=nothing, requesterId=nothing) = 
+    RunInstancesResponseType(; requestId=nothing, reservationId=nothing, ownerId=nothing, groupSet=nothing, instancesSet=nothing, requesterId=nothing) =
          new(requestId, reservationId, ownerId, groupSet, instancesSet, requesterId)
 end
 function RunInstancesResponseType(pd::ETree)
@@ -8412,7 +8937,7 @@ type RevokeSecurityGroupEgressType
     groupId::Union(ASCIIString, Nothing)
     ipPermissions::Union(Vector{IpPermissionType}, Nothing)
 
-    RevokeSecurityGroupEgressType(; groupId=nothing, ipPermissions=nothing) = 
+    RevokeSecurityGroupEgressType(; groupId=nothing, ipPermissions=nothing) =
          new(groupId, ipPermissions)
 end
 function RevokeSecurityGroupEgressType(pd::ETree)
@@ -8429,7 +8954,7 @@ type DescribeNetworkAclsResponseType
     requestId::Union(ASCIIString, Nothing)
     networkAclSet::Union(Vector{NetworkAclType}, Nothing)
 
-    DescribeNetworkAclsResponseType(; requestId=nothing, networkAclSet=nothing) = 
+    DescribeNetworkAclsResponseType(; requestId=nothing, networkAclSet=nothing) =
          new(requestId, networkAclSet)
 end
 function DescribeNetworkAclsResponseType(pd::ETree)
@@ -8446,7 +8971,7 @@ type DescribeNetworkInterfacesResponseType
     requestId::Union(ASCIIString, Nothing)
     networkInterfaceSet::Union(Vector{NetworkInterfaceType}, Nothing)
 
-    DescribeNetworkInterfacesResponseType(; requestId=nothing, networkInterfaceSet=nothing) = 
+    DescribeNetworkInterfacesResponseType(; requestId=nothing, networkInterfaceSet=nothing) =
          new(requestId, networkInterfaceSet)
 end
 function DescribeNetworkInterfacesResponseType(pd::ETree)
@@ -8464,7 +8989,7 @@ type DescribeReservedInstancesOfferingsResponseType
     reservedInstancesOfferingsSet::Union(Vector{DescribeReservedInstancesOfferingsResponseSetItemType}, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeReservedInstancesOfferingsResponseType(; requestId=nothing, reservedInstancesOfferingsSet=nothing, nextToken=nothing) = 
+    DescribeReservedInstancesOfferingsResponseType(; requestId=nothing, reservedInstancesOfferingsSet=nothing, nextToken=nothing) =
          new(requestId, reservedInstancesOfferingsSet, nextToken)
 end
 function DescribeReservedInstancesOfferingsResponseType(pd::ETree)
@@ -8496,7 +9021,7 @@ type SpotInstanceRequestSetItemType
     tagSet::Union(Vector{ResourceTagSetItemType}, Nothing)
     launchedAvailabilityZone::Union(ASCIIString, Nothing)
 
-    SpotInstanceRequestSetItemType(; spotInstanceRequestId=nothing, spotPrice=nothing, _type=nothing, state=nothing, fault=nothing, status=nothing, validFrom=nothing, validUntil=nothing, launchGroup=nothing, availabilityZoneGroup=nothing, launchSpecification=nothing, instanceId=nothing, createTime=nothing, productDescription=nothing, tagSet=nothing, launchedAvailabilityZone=nothing) = 
+    SpotInstanceRequestSetItemType(; spotInstanceRequestId=nothing, spotPrice=nothing, _type=nothing, state=nothing, fault=nothing, status=nothing, validFrom=nothing, validUntil=nothing, launchGroup=nothing, availabilityZoneGroup=nothing, launchSpecification=nothing, instanceId=nothing, createTime=nothing, productDescription=nothing, tagSet=nothing, launchedAvailabilityZone=nothing) =
          new(spotInstanceRequestId, spotPrice, _type, state, fault, status, validFrom, validUntil, launchGroup, availabilityZoneGroup, launchSpecification, instanceId, createTime, productDescription, tagSet, launchedAvailabilityZone)
 end
 function SpotInstanceRequestSetItemType(pd::ETree)
@@ -8527,7 +9052,7 @@ type ImportInstanceResponseType
     requestId::Union(ASCIIString, Nothing)
     conversionTask::Union(ConversionTaskType, Nothing)
 
-    ImportInstanceResponseType(; requestId=nothing, conversionTask=nothing) = 
+    ImportInstanceResponseType(; requestId=nothing, conversionTask=nothing) =
          new(requestId, conversionTask)
 end
 function ImportInstanceResponseType(pd::ETree)
@@ -8547,7 +9072,7 @@ type VolumeStatusItemType
     eventsSet::Union(Vector{VolumeStatusEventItemType}, Nothing)
     actionsSet::Union(Vector{VolumeStatusActionItemType}, Nothing)
 
-    VolumeStatusItemType(; volumeId=nothing, availabilityZone=nothing, volumeStatus=nothing, eventsSet=nothing, actionsSet=nothing) = 
+    VolumeStatusItemType(; volumeId=nothing, availabilityZone=nothing, volumeStatus=nothing, eventsSet=nothing, actionsSet=nothing) =
          new(volumeId, availabilityZone, volumeStatus, eventsSet, actionsSet)
 end
 function VolumeStatusItemType(pd::ETree)
@@ -8567,7 +9092,7 @@ type DescribeSpotInstanceRequestsResponseType
     requestId::Union(ASCIIString, Nothing)
     spotInstanceRequestSet::Union(Vector{SpotInstanceRequestSetItemType}, Nothing)
 
-    DescribeSpotInstanceRequestsResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) = 
+    DescribeSpotInstanceRequestsResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) =
          new(requestId, spotInstanceRequestSet)
 end
 function DescribeSpotInstanceRequestsResponseType(pd::ETree)
@@ -8584,7 +9109,7 @@ type DescribeCustomerGatewaysResponseType
     requestId::Union(ASCIIString, Nothing)
     customerGatewaySet::Union(Vector{CustomerGatewayType}, Nothing)
 
-    DescribeCustomerGatewaysResponseType(; requestId=nothing, customerGatewaySet=nothing) = 
+    DescribeCustomerGatewaysResponseType(; requestId=nothing, customerGatewaySet=nothing) =
          new(requestId, customerGatewaySet)
 end
 function DescribeCustomerGatewaysResponseType(pd::ETree)
@@ -8602,7 +9127,7 @@ type DescribeVolumeStatusResponseType
     volumeStatusSet::Union(Vector{VolumeStatusItemType}, Nothing)
     nextToken::Union(ASCIIString, Nothing)
 
-    DescribeVolumeStatusResponseType(; requestId=nothing, volumeStatusSet=nothing, nextToken=nothing) = 
+    DescribeVolumeStatusResponseType(; requestId=nothing, volumeStatusSet=nothing, nextToken=nothing) =
          new(requestId, volumeStatusSet, nextToken)
 end
 function DescribeVolumeStatusResponseType(pd::ETree)
@@ -8620,7 +9145,7 @@ type DescribeVpnGatewaysResponseType
     requestId::Union(ASCIIString, Nothing)
     vpnGatewaySet::Union(Vector{VpnGatewayType}, Nothing)
 
-    DescribeVpnGatewaysResponseType(; requestId=nothing, vpnGatewaySet=nothing) = 
+    DescribeVpnGatewaysResponseType(; requestId=nothing, vpnGatewaySet=nothing) =
          new(requestId, vpnGatewaySet)
 end
 function DescribeVpnGatewaysResponseType(pd::ETree)
@@ -8650,7 +9175,7 @@ type LaunchSpecificationRequestType
     iamInstanceProfile::Union(IamInstanceProfileRequestType, Nothing)
     ebsOptimized::Union(Bool, Nothing)
 
-    LaunchSpecificationRequestType(; imageId=nothing, keyName=nothing, groupSet=nothing, userData=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) = 
+    LaunchSpecificationRequestType(; imageId=nothing, keyName=nothing, groupSet=nothing, userData=nothing, addressingType=nothing, instanceType=nothing, placement=nothing, kernelId=nothing, ramdiskId=nothing, blockDeviceMapping=nothing, monitoring=nothing, subnetId=nothing, networkInterfaceSet=nothing, iamInstanceProfile=nothing, ebsOptimized=nothing) =
          new(imageId, keyName, groupSet, userData, addressingType, instanceType, placement, kernelId, ramdiskId, blockDeviceMapping, monitoring, subnetId, networkInterfaceSet, iamInstanceProfile, ebsOptimized)
 end
 function LaunchSpecificationRequestType(pd::ETree)
@@ -8683,7 +9208,7 @@ type ReservationInfoType
     instancesSet::Union(Vector{RunningInstancesItemType}, Nothing)
     requesterId::Union(ASCIIString, Nothing)
 
-    ReservationInfoType(; reservationId=nothing, ownerId=nothing, groupSet=nothing, instancesSet=nothing, requesterId=nothing) = 
+    ReservationInfoType(; reservationId=nothing, ownerId=nothing, groupSet=nothing, instancesSet=nothing, requesterId=nothing) =
          new(reservationId, ownerId, groupSet, instancesSet, requesterId)
 end
 function ReservationInfoType(pd::ETree)
@@ -8703,7 +9228,7 @@ type DescribeBundleTasksResponseType
     requestId::Union(ASCIIString, Nothing)
     bundleInstanceTasksSet::Union(Vector{BundleInstanceTaskType}, Nothing)
 
-    DescribeBundleTasksResponseType(; requestId=nothing, bundleInstanceTasksSet=nothing) = 
+    DescribeBundleTasksResponseType(; requestId=nothing, bundleInstanceTasksSet=nothing) =
          new(requestId, bundleInstanceTasksSet)
 end
 function DescribeBundleTasksResponseType(pd::ETree)
@@ -8720,7 +9245,7 @@ type CreateRouteTableResponseType
     requestId::Union(ASCIIString, Nothing)
     routeTable::Union(RouteTableType, Nothing)
 
-    CreateRouteTableResponseType(; requestId=nothing, routeTable=nothing) = 
+    CreateRouteTableResponseType(; requestId=nothing, routeTable=nothing) =
          new(requestId, routeTable)
 end
 function CreateRouteTableResponseType(pd::ETree)
@@ -8737,7 +9262,7 @@ type RequestSpotInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     spotInstanceRequestSet::Union(Vector{SpotInstanceRequestSetItemType}, Nothing)
 
-    RequestSpotInstancesResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) = 
+    RequestSpotInstancesResponseType(; requestId=nothing, spotInstanceRequestSet=nothing) =
          new(requestId, spotInstanceRequestSet)
 end
 function RequestSpotInstancesResponseType(pd::ETree)
@@ -8754,7 +9279,7 @@ type DescribeSubnetsResponseType
     requestId::Union(ASCIIString, Nothing)
     subnetSet::Union(Vector{SubnetType}, Nothing)
 
-    DescribeSubnetsResponseType(; requestId=nothing, subnetSet=nothing) = 
+    DescribeSubnetsResponseType(; requestId=nothing, subnetSet=nothing) =
          new(requestId, subnetSet)
 end
 function DescribeSubnetsResponseType(pd::ETree)
@@ -8777,7 +9302,7 @@ type RequestSpotInstancesType
     availabilityZoneGroup::Union(ASCIIString, Nothing)
     launchSpecification::Union(LaunchSpecificationRequestType, Nothing)
 
-    RequestSpotInstancesType(; spotPrice=nothing, instanceCount=nothing, _type=nothing, validFrom=nothing, validUntil=nothing, launchGroup=nothing, availabilityZoneGroup=nothing, launchSpecification=nothing) = 
+    RequestSpotInstancesType(; spotPrice=nothing, instanceCount=nothing, _type=nothing, validFrom=nothing, validUntil=nothing, launchGroup=nothing, availabilityZoneGroup=nothing, launchSpecification=nothing) =
          new(spotPrice, instanceCount, _type, validFrom, validUntil, launchGroup, availabilityZoneGroup, launchSpecification)
 end
 function RequestSpotInstancesType(pd::ETree)
@@ -8800,7 +9325,7 @@ type BundleInstanceResponseType
     requestId::Union(ASCIIString, Nothing)
     bundleInstanceTask::Union(BundleInstanceTaskType, Nothing)
 
-    BundleInstanceResponseType(; requestId=nothing, bundleInstanceTask=nothing) = 
+    BundleInstanceResponseType(; requestId=nothing, bundleInstanceTask=nothing) =
          new(requestId, bundleInstanceTask)
 end
 function BundleInstanceResponseType(pd::ETree)
@@ -8817,7 +9342,7 @@ type DescribeInstancesResponseType
     requestId::Union(ASCIIString, Nothing)
     reservationSet::Union(Vector{ReservationInfoType}, Nothing)
 
-    DescribeInstancesResponseType(; requestId=nothing, reservationSet=nothing) = 
+    DescribeInstancesResponseType(; requestId=nothing, reservationSet=nothing) =
          new(requestId, reservationSet)
 end
 function DescribeInstancesResponseType(pd::ETree)
@@ -8834,7 +9359,7 @@ type DescribeSecurityGroupsResponseType
     requestId::Union(ASCIIString, Nothing)
     securityGroupInfo::Union(Vector{SecurityGroupItemType}, Nothing)
 
-    DescribeSecurityGroupsResponseType(; requestId=nothing, securityGroupInfo=nothing) = 
+    DescribeSecurityGroupsResponseType(; requestId=nothing, securityGroupInfo=nothing) =
          new(requestId, securityGroupInfo)
 end
 function DescribeSecurityGroupsResponseType(pd::ETree)
@@ -8845,5 +9370,3 @@ function DescribeSecurityGroupsResponseType(pd::ETree)
 end
 
 export DescribeSecurityGroupsResponseType
-
-
