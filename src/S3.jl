@@ -61,9 +61,12 @@ type RO # RequestOptions
     body::String
     istream::Any
     ostream::Any
+    timeout::Int64
+    ctimeout::Int64
+    max_errs::Int64
 
     RO() = RO(:GET, "", "")
-    RO(verb, bkt, key) = new(verb, bkt, key, Tuple[], Tuple[], Tuple[], "", "", nothing, nothing)
+    RO(verb, bkt, key) = new(verb, bkt, key, Tuple[], Tuple[], Tuple[], "", "", nothing, nothing, 3, 30, 10)
 end
 export RO
 
@@ -391,8 +394,13 @@ function get_object(env::AWSEnv, bkt::String, key::String; options::GetObjectOpt
     s3_resp
 end
 
-function open_object(env::AWSEnv, bkt::String, key::String; version_id::String="")
+function open_object(env::AWSEnv, bkt::String, key::String, options::RequestOptions=nothing; version_id::String="")
     ro = RO(:OPEN, bkt, key)
+    if (options != nothing)
+        ro.timeout = options.timeout
+        ro.ctimeout = options.ctimeout
+        ro.max_errs = options.max_errs
+    end
     s3_resp = do_request(env, ro, conv_to_string=false)
     s3_resp
 end
@@ -640,7 +648,7 @@ function do_http(env::AWSEnv, ro::RO)
 
     url = "https://s3.amazonaws.com" * full_path
 
-    http_options = RequestOptions(headers=all_hdrs, ostream=ro.ostream, request_timeout=env.timeout, auto_content_type=false)
+    http_options = RequestOptions(headers=all_hdrs, ostream=ro.ostream, request_timeout=env.timeout, auto_content_type=false, timeout=ro.timeout, ctimeout=ro.ctimeout, max_errs=ro.max_errs)
 
     if env.dbg
         println("Verb : " * string(ro.verb))
