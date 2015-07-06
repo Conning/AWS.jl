@@ -39,10 +39,8 @@ type S3Response
     request_id::String
     version_id::String
 
-# all header fields
+    # all header fields
     headers::Dict
-
-# All header fields
     obj::Any
     pd::Union(ETree, Nothing)
 
@@ -61,9 +59,10 @@ type RO # RequestOptions
     body::String
     istream::Any
     ostream::Any
+    max_buff_size::Int64
 
     RO() = RO(:GET, "", "")
-    RO(verb, bkt, key) = new(verb, bkt, key, Tuple[], Tuple[], Tuple[], "", "", nothing, nothing)
+    RO(verb, bkt, key) = new(verb, bkt, key, Tuple[], Tuple[], Tuple[], "", "", nothing, nothing, -1)
 end
 export RO
 
@@ -391,6 +390,19 @@ function get_object(env::AWSEnv, bkt::String, key::String; options::GetObjectOpt
     s3_resp
 end
 
+# returns a connection to the specified object
+function open_object(env::AWSEnv, bkt::String, key::String; max_buff_size=-1, version_id::String="")
+  ro = RO(:OPEN, bkt, key)
+  ro.max_buff_size = max_buff_size
+  s3_resp = do_request(env, ro, conv_to_string=false)
+  s3_resp
+end
+
+# closes an opened connection
+function close_object(conn::ConnContext)
+  HTTPC.disconnect(conn)
+end
+
 function get_object_acl(env::AWSEnv, bkt::String, key::String; version_id::String="")
     ro = RO(:GET, bkt, key)
     ro.sub_res=[("acl", "")]
@@ -561,6 +573,10 @@ end
 function do_request(env::AWSEnv, ro::RO; conv_to_string=true)
     http_resp = do_http(env, ro)
 
+    if ro.verb == :OPEN
+      return http_resp # the connection
+    end
+
     s3_resp = S3Response()
 
     s3_resp.http_code = http_resp.http_code
@@ -630,7 +646,7 @@ function do_http(env::AWSEnv, ro::RO)
 
     url = "https://s3.amazonaws.com" * full_path
 
-    http_options = RequestOptions(headers=all_hdrs, ostream=ro.ostream, request_timeout=env.timeout, auto_content_type=false)
+    http_options = RequestOptions(headers=all_hdrs, ostream=ro.ostream, request_timeout=env.timeout, max_buff_size=ro.max_buff_size, auto_content_type=false)
 
     if env.dbg
         println("Verb : " * string(ro.verb))
@@ -648,6 +664,8 @@ function do_http(env::AWSEnv, ro::RO)
 
     if ro.verb == :GET
         http_resp = HTTPC.get(url, http_options)
+    elseif (ro.verb == :OPEN)
+      http_resp = HTTPC.connect(url, http_options)
     elseif (ro.verb == :PUT) || (ro.verb == :POST)
         senddata = isa(ro.istream, IO) ? ro.istream :
                    isa(ro.istream, String) ? (:file, ro.istream) :
@@ -683,7 +701,8 @@ function canonicalize_and_sign(env::AWSEnv, ro::RO, md5::String)
     (new_amz_hdrs, amz_hdrs_str) = get_canon_amz_headers(ro.amz_hdrs)
     (full_path, sign_path) = get_canonicalized_resource(ro)
 
-    str2sign = string(ro.verb) * "\n" *
+    verb = ro.verb == :OPEN ? string(:GET) : string(ro.verb)
+    str2sign = verb * "\n" *
     md5 * "\n" *
     ro.cont_typ * "\n" * "\n" * # Using x-amz-date instead of Date.
     amz_hdrs_str * sign_path
