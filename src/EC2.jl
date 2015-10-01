@@ -69,7 +69,7 @@ function ec2_execute(env::AWSEnv, action::AbstractString, params_in=nothing)
     amz_headers, signed_querystr = canonicalize_and_sign(env, "ec2", "GET", params)
 
     ep_path = env.ep_path * (env.ep_path[end] == '/' ? "" : "/")
-    complete_url = "https://" * ep_host(env, "ec2") * ep_path * "?" * signed_querystr
+    complete_url = env.ep_scheme * "://" * ep_host(env, "ec2") * ep_path * "?" * signed_querystr
     if (env.dbg) || (env.dry_run)
         println("URL:\n$complete_url\n")
     end

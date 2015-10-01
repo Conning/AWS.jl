@@ -49,6 +49,7 @@ type AWSEnv
     aws_seckey::ASCIIString     # AWS Secret key for signing requests
     aws_token::ASCIIString      # AWS Security Token for temporary credentials
     region::AbstractString      # region name
+    ep_scheme::ASCIIString      # URL scheme: http or https
     ep_host::AbstractString     # region endpoint (host)
     ep_path::AbstractString     # region endpoint (path)
     sig_ver::Int                # AWS signature version (2 or 4)
@@ -57,7 +58,7 @@ type AWSEnv
     dbg::Bool                   # print request to screen
 
 
-    function AWSEnv(; id=AWS_ID, key=AWS_SECKEY, token=AWS_TOKEN, ec2_creds=false, region=US_EAST_1, ep="", sig_ver=4, timeout=0.0, dr=false, dbg=false)
+    function AWSEnv(; id=AWS_ID, key=AWS_SECKEY, token=AWS_TOKEN, ec2_creds=false, scheme="https", region=US_EAST_1, ep="", sig_ver=4, timeout=0.0, dr=false, dbg=false)
         if ec2_creds
             creds = get_instance_credentials()
             if creds != nothing
@@ -71,14 +72,7 @@ type AWSEnv
             error("Invalid AWS security credentials provided")
         end
 
-        s = search(ep,"/")
-        if length(s) == 0
-            ep_host = ep
-            ep_path = "/"
-        else
-            ep_host = ep[1:(first(s)-1)]
-            ep_path = ep[first(s):end]
-        end
+        ep_scheme, ep_host, ep_path = parse_endpoint(ep, scheme)
 
         # host portion of ep overrides region
         if length(ep_host) > 19 && ep_host[1:4] == "ec2." && ep_host[(end-13):end] == ".amazonaws.com"
@@ -99,14 +93,34 @@ type AWSEnv
         end
 
         if dr
-            new(id, key, token, region, ep_host, ep_path, sig_ver, timeout, dr, true)
+            new(id, key, token, region, ep_scheme, ep_host, ep_path, sig_ver, timeout, dr, true)
         else
-            new(id, key, token, region, ep_host, ep_path, sig_ver, timeout, false, dbg)
+            new(id, key, token, region, ep_scheme, ep_host, ep_path, sig_ver, timeout, false, dbg)
         end
     end
 
 end
 export AWSEnv
+
+function parse_endpoint(ep, default_scheme)
+    s = search(ep,"://")
+    if length(s) == 0
+        ep_scheme = default_scheme
+        ephp = ep
+    else
+        ep_scheme = ep[1:(first(s)-1)]
+        ephp = ep[first(s)+3:end]
+    end
+    s = search(ephp,"/")
+    if length(s) == 0
+        ep_host = ephp
+        ep_path = "/"
+    else
+        ep_host = ephp[1:(first(s)-1)]
+        ep_path = ephp[first(s):end]
+    end
+    return (ep_scheme, ep_host, ep_path)
+end
 
 ep_host(env::AWSEnv, service) = lowercase(env.ep_host=="" ? "$service.$(env.region).amazonaws.com" : env.ep_host)
 export ep_host

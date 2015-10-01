@@ -22,6 +22,7 @@ type AWSEnv
     aws_seckey::ASCIIString     # AWS Secret key for signing requests
     aws_token::ASCIIString      # AWS Security Token for temporary credentials
     region::AbstractString      # region name
+    ep_scheme::ASCIIString      # region endpoint (scheme)
     ep_host::AbstractString     # region endpoint (host)
     ep_path::AbstractString     # region endpoint (path)
     sig_ver::Int                # AWS signature version (2 or 4)
@@ -41,7 +42,7 @@ AWSEnv(; id=AWS_ID, key=AWS_SECKEY, token=AWS_TOKEN, ec2_creds=false, region=US_
 - The ```AWS_TOKEN``` is an empty string by default. Override ```token``` if the ```id``` and ```key``` are temporary security credentials.
 - Set ```ec2_creds``` to true to automatically retrieve temporary security credentials if running on an EC2 instance that has such credentials.
 - Set ```region``` to one of the AWS region name strings, e.g., "us-east-1". Not needed if setting ```ep```.
-- ```ep``` can contain both a hostname and a pathname for an AWS endpoint. It is generally not needed when using native AWS services; use ```region``` instead. If using a service that emulates AWS, set ```ep``` to the hostname of the endpoint to be used. If both ```region``` and ```ep``` are set, the host portion of ```ep``` will override region, and the path portion of ```ep``` will be used in conjunction with ```region```.
+- ```ep``` can contain a scheme, a hostname, and a pathname for an AWS endpoint. It is generally not needed when using native AWS services; use ```region``` instead. If using a service that emulates AWS, set ```ep``` to the endpoint to be used. If both ```region``` and ```ep``` are set, the host portion of ```ep``` will override region, and the scheme and path portions of ```ep``` will be used in conjunction with ```region```.
 - ```sig_ver``` must be set to 2 or 4. Some AWS services require one signature version or the other, in which case this value will be ignored.
 
 
