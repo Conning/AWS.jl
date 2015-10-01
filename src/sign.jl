@@ -1,10 +1,10 @@
-function canonicalize_and_sign(env::AWSEnv, service, method, params)
-    if env.sig_ver == 2
+function canonicalize_and_sign(env::AWSEnv, service, method, params; sig_ver=env.sig_ver)
+    if sig_ver == 2
       signature_version_2(env, service, method, copy(params))
-    elseif env.sig_ver == 4
+    elseif sig_ver == 4
       signature_version_4(env, service, method, copy(params))
     else
-      error("invalid signature version $(env.sig_ver)")
+      error("invalid signature version $sig_ver")
     end
 end
 export canonicalize_and_sign
@@ -41,7 +41,7 @@ function signature_version_4(env::AWSEnv, service, method, request_parameters)
     sort!(request_parameters)
     amzdate = get_utc_timestamp(; basic=true)
     datestamp = amzdate[1:searchindex(amzdate, "T")-1]
-    payload = "" ##### Assume empty payload for the moment.
+    payload = "" # Assume empty payload for the moment.
 
     # Task 1: canonical request
     canonical_uri = env.ep_path

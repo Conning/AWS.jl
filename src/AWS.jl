@@ -99,6 +99,13 @@ type AWSEnv
         end
     end
 
+    function AWSEnv(env::AWSEnv; ep="")
+        ep_scheme, ep_host, ep_path = parse_endpoint(ep, env.ep_scheme)
+
+        new(env.aws_id, env.aws_seckey, env.aws_token, env.region, ep_scheme,
+            ep_host, ep_path, env.sig_ver, env.timeout, env.dry_run, env.dbg)
+    end
+
 end
 export AWSEnv
 
@@ -160,6 +167,7 @@ include("crypto.jl")
 include("sign.jl")
 include("EC2.jl")
 include("S3.jl")
+include("SQS.jl")
 
 include("show.jl")
 
