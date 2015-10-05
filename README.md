@@ -234,6 +234,55 @@ For succcessful requests, EC2Response.obj will contain an object of the appropri
 For example, for RunInstances, the EC2Response.obj will be of type RunInstancesResponseType
 
 
+### SQS API
+
+Currently the following are available:
+
+- CreateQueue
+- GetQueueUrl
+- ListQueues
+- DeleteQueue
+
+
+Example:
+
+```
+using AWS.SQS
+attributes = AttributeType()
+push!(attributes, AttributeType(name="DelaySeconds",value="300"))
+push!(attributes, AttributeType(name="VisibilityTimeout",value="120")
+CreateQueue(env, queueName="testing123", attributeSet=attributes)
+```
+
+Each of the functions returns an object of type:
+
+```
+type SQSResponse
+    http_code::Int
+    headers
+    body::Union{AbstractString, Void}
+    pd::Union{ETree, Void}
+    obj::Any
+end
+```
+
+In the event of an error, SQSResponse.obj has an object of type
+
+```
+type SQSError
+    code::AbstractString
+    msg::AbstractString
+    request_id::Union{AbstractString, Void}
+end
+```
+
+For succcessful requests, SQSResponse.obj will contain an object of the appropriate type.
+
+For example, for CreateQueue, the SQSResponse.obj will be of type CreateQueueResponseType
+
+
+
+
 
 
 ### Julia Dependencies

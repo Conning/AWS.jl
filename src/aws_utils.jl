@@ -5,7 +5,7 @@ safe_parseint(s) = (s != nothing) ? Base.parse(Int, s) : nothing
 safe_parsebool(s) = (s != nothing) ? ((lowercase(s) == "true") ? true : false) : nothing
 
 function safe_parse_as(as::Type, s::Union{AbstractString, Void})
-    if (as == AbstractString) || (s == nothing)
+    if (issubtype(as, AbstractString) || (s == nothing))
         return s
     elseif (as == Int)
         return Base.parse(Int, s)
@@ -42,7 +42,7 @@ function parse_vector_as(as_type::Type, typ_str::AbstractString, vect)
     jl_vect = as_type[]
     if (vect == nothing) return jl_vect end
     for pd in vect
-        val = LibExpat.find(pd, "/" * typ_str * "#text")
+        val = LibExpat.find(pd, "/" * typ_str * "#string")
         val = safe_parse_as(as_type, val)
         if (val == nothing) error("Invalid $(typ_str) for pd vector") end
         push!(jl_vect, val)

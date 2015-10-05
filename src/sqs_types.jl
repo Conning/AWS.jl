@@ -1,12 +1,31 @@
+type AttributeType
+    name::Union{ASCIIString, Void}
+    value::Union{ASCIIString, Void}
+
+    AttributeType(; name=nothing, value=nothing) =
+         new(name, value)
+end
+function AttributeType(pd::ETree)
+    o = AttributeType()
+    o.name = LibExpat.find(pd, "name#string")
+    o.value = LibExpat.find(pd, "value#string")
+    o
+end
+
+export AttributeType
+
+
 type CreateQueueType
     queueName::Union{ASCIIString, Void}
+    attributeSet::Union{Vector{AttributeType}, Void}
 
-    CreateQueueType(; queueName=nothing) =
-         new(queueName)
+    CreateQueueType(; queueName=nothing, attributeSet=nothing) =
+         new(queueName, attributeSet)
 end
 function CreateQueueType(pd::ETree)
     o = CreateQueueType()
     o.queueName = LibExpat.find(pd, "queueName#string")
+    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "attribute"))
     o
 end
 
@@ -88,7 +107,7 @@ type ListQueuesResponseType
 end
 function ListQueuesResponseType(pd::ETree)
     o = ListQueuesResponseType()
-    o.queueUrlSet = ASCIIString[url.elements[1] for url in LibExpat.find(pd, "ListQueuesResult/QueueUrl")]
+    o.queueUrlSet = ASCIIString[LibExpat.find(url, "#string") for url in LibExpat.find(pd, "ListQueuesResult/QueueUrl")]
     o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
     o
 end

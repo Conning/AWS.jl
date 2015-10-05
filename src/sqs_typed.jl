@@ -30,7 +30,7 @@ function add_to_params(params, obj, pfx)
 
             if startswith(arg_name, "_")
                 # handle field names that match julia reserved types....
-                arg_name =  arg_name[2:end]
+                arg_name = arg_name[2:end]
             end
 
             #Captitalize the first letter for the argument.
