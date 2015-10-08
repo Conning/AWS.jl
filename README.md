@@ -239,6 +239,7 @@ For example, for RunInstances, the EC2Response.obj will be of type RunInstancesR
 Currently the following are available:
 
 - CreateQueue
+- GetQueueAttributes
 - GetQueueUrl
 - ListQueues
 - DeleteQueue
@@ -247,11 +248,17 @@ Currently the following are available:
 Example:
 
 ```
-using AWS.SQS
-attributes = AttributeType()
+using AWS, AWS.SQS
+env=AWSEnv()
+...
+attributes = AttributeType[]
 push!(attributes, AttributeType(name="DelaySeconds",value="300"))
 push!(attributes, AttributeType(name="VisibilityTimeout",value="120")
-CreateQueue(env, queueName="testing123", attributeSet=attributes)
+qurl = CreateQueue(env, queueName="testing123", attributeSet=attributes).obj.queueUrl
+```
+
+```
+GetQueueAttributes(env, queueUrl=qurl, attributeNameSet=["All"])
 ```
 
 Each of the functions returns an object of type:

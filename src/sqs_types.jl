@@ -7,8 +7,8 @@ type AttributeType
 end
 function AttributeType(pd::ETree)
     o = AttributeType()
-    o.name = LibExpat.find(pd, "name#string")
-    o.value = LibExpat.find(pd, "value#string")
+    o.name = LibExpat.find(pd, "Name#string")
+    o.value = LibExpat.find(pd, "Value#string")
     o
 end
 
@@ -24,8 +24,8 @@ type CreateQueueType
 end
 function CreateQueueType(pd::ETree)
     o = CreateQueueType()
-    o.queueName = LibExpat.find(pd, "queueName#string")
-    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "attribute"))
+    o.queueName = LibExpat.find(pd, "QueueName#string")
+    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "Attribute"))
     o
 end
 
@@ -58,8 +58,8 @@ type GetQueueUrlType
 end
 function GetQueueUrlType(pd::ETree)
     o = GetQueueUrlType()
-    o.queueName = LibExpat.find(pd, "queueName#string")
-    o.queueOwnerAWSAccountId = LibExpat.find(pd, "queueOwnerAWSAccountId#string")
+    o.queueName = LibExpat.find(pd, "QueueName#string")
+    o.queueOwnerAWSAccountId = LibExpat.find(pd, "QueueOwnerAWSAccountId#string")
     o
 end
 
@@ -91,7 +91,7 @@ type ListQueuesType
 end
 function ListQueuesType(pd::ETree)
     o = ListQueuesType()
-    o.queueName = LibExpat.find(pd, "queueNamePrefix#string")
+    o.queueName = LibExpat.find(pd, "QueueNamePrefix#string")
     o
 end
 
@@ -115,6 +115,12 @@ end
 export ListQueuesResponseType
 
 
+# ChangeMessageVisibilityType
+# ChangeMessageVisibilityResponseType
+
+# DeleteMessageType
+# DeleteMessageResponseType
+
 type DeleteQueueType
     queueUrl::Union{ASCIIString, Void}
 
@@ -123,7 +129,7 @@ type DeleteQueueType
 end
 function DeleteQueueType(pd::ETree)
     o = DeleteQueueType()
-    o.queueUrl = LibExpat.find(pd, "queueUrl#string")
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
     o
 end
 
@@ -143,3 +149,37 @@ function DeleteQueueResponseType(pd::ETree)
 end
 
 export DeleteQueueResponseType
+
+
+type GetQueueAttributesType
+    attributeNameSet::Union{Vector{ASCIIString}, Void}
+    queueUrl::Union{ASCIIString, Void}
+
+    GetQueueAttributesType(; attributeNameSet=nothing, queueUrl=nothing) =
+         new(attributeNameSet, queueUrl)
+end
+function GetQueueAttributesType(pd::ETree)
+    o = GetQueueAttributesType()
+    o.attributeNameSet = AWS.@parse_vector(ASCIIString, LibExpat.find(pd, "AttributeName"))
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
+    o
+end
+
+export GetQueueAttributesType
+
+
+type GetQueueAttributesResponseType
+    attributeSet::Union{Vector{AttributeType}, Void}
+    requestId::Union{ASCIIString, Void}
+
+    GetQueueAttributesResponseType(; attributeSet=nothing, requestId=nothing) =
+         new(attributeSet, requestId)
+end
+function GetQueueAttributesResponseType(pd::ETree)
+    o = GetQueueAttributesResponseType()
+    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "GetQueueAttributesResult/Attribute"))
+    o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
+    o
+end
+
+export GetQueueAttributesResponseType

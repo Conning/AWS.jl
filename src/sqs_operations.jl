@@ -32,6 +32,23 @@ end
 export DeleteQueue
 
 
+function GetQueueAttributes(env::AWSEnv, msg::GetQueueAttributesType)
+    sqsresp::SQSResponse = call_sqs(env, "GetQueueAttributes" , msg)
+    if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
+        sqsresp.obj = GetQueueAttributesResponseType(sqsresp.pd)
+    end
+    sqsresp
+end
+function GetQueueAttributes(env::AWSEnv; kwargs...)
+    msg=GetQueueAttributesType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    GetQueueAttributes(env, msg)
+end
+export GetQueueAttributes
+
+
 function GetQueueUrl(env::AWSEnv, msg::GetQueueUrlType)
     sqsresp::SQSResponse = call_sqs(env, "GetQueueUrl" , msg)
     if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
@@ -70,5 +87,6 @@ ValidRqstMsgs = Dict(
     "CreateQueueType"=>true,
     "GetQueueUrlType"=>true,
     "ListQueuesType"=>true,
-    "DeleteQueueType"=>true
+    "DeleteQueueType"=>true,
+    "GetQueueAttributesType"=>true
 )
