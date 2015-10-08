@@ -239,10 +239,11 @@ For example, for RunInstances, the EC2Response.obj will be of type RunInstancesR
 Currently the following are available:
 
 - CreateQueue
-- GetQueueAttributes
 - GetQueueUrl
 - ListQueues
 - DeleteQueue
+- GetQueueAttributes
+- SetQueueAttributes
 
 
 Example:

@@ -37,7 +37,7 @@ type CreateQueueResponseType
     requestId::Union{ASCIIString, Void}
 
     CreateQueueResponseType(; queueUrl=nothing, requestId=nothing) =
-         new(requestId, queueUrl)
+         new(queueUrl, requestId)
 end
 function CreateQueueResponseType(pd::ETree)
     o = CreateQueueResponseType()
@@ -183,3 +183,35 @@ function GetQueueAttributesResponseType(pd::ETree)
 end
 
 export GetQueueAttributesResponseType
+
+
+type SetQueueAttributesType
+    attributeSet::Union{Vector{AttributeType}, Void}
+    queueUrl::Union{ASCIIString, Void}
+
+    SetQueueAttributesType(; attributeSet=nothing, queueUrl=nothing) =
+         new(attributeSet, queueUrl)
+end
+function SetQueueAttributesType(pd::ETree)
+    o = SetQueueAttributesType()
+    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "Attribute"))
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
+    o
+end
+
+export SetQueueAttributesType
+
+
+type SetQueueAttributesResponseType
+    requestId::Union{ASCIIString, Void}
+
+    SetQueueAttributesResponseType(; requestId=nothing) =
+         new(requestId)
+end
+function SetQueueAttributesResponseType(pd::ETree)
+    o = SetQueueAttributesResponseType()
+    o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
+    o
+end
+
+export SetQueueAttributesResponseType
