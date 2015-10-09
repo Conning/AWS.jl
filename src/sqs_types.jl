@@ -28,8 +28,7 @@ end
 function MessageAttributeValueType(pd::ETree)
     o = MessageAttributeValueType()
     o.dataType = LibExpat.find(pd, "DataType#string")
-    # Should BinaryValue be extracted as CDATA or other format instead of a string?
-    o.binaryValue = LibExpat.find(pd, "BinaryValue#string")
+    o.binaryValue = AWS.safe_parseb64(LibExpat.find(pd, "BinaryValue#string"))
     o.stringValue = LibExpat.find(pd, "StringValue#string")
     o
 end
@@ -222,6 +221,75 @@ function GetQueueAttributesResponseType(pd::ETree)
 end
 
 export GetQueueAttributesResponseType
+
+
+type ReceiveMessageType
+    maxNumberOfMessages::Union{Int, Void}
+    visibilityTimeout::Union{Int, Void}
+    waitTimeSeconds::Union{Int, Void}
+    attributeNameSet::Union{Vector{ASCIIString}, Void}
+    messageAttributeNameSet::Union{Vector{ASCIIString}, Void}
+    queueUrl::Union{ASCIIString, Void}
+
+    ReceiveMessageType(; maxNumberOfMessages=nothing, visibilityTimeout=nothing, waitTimeSeconds=nothing, attributeNameSet=nothing, messageAttributeNameSet=nothing, queueUrl=nothing) =
+         new(maxNumberOfMessages, visibilityTimeout, waitTimeSeconds, attributeNameSet, messageAttributeNameSet, queueUrl)
+end
+function ReceiveMessageType(pd::ETree)
+    o = ReceiveMessageType()
+    o.maxNumberOfMessages = AWS.safe_parseint(LibExpat.find(pd, "MaxNumberOfMessages#string"))
+    o.visibilityTimeout = AWS.safe_parseint(LibExpat.find(pd, "VisibilityTimeout#string"))
+    o.waitTimeSeconds = AWS.safe_parseint(LibExpat.find(pd, "WaitTimeSeconds#string"))
+    o.attributeNameSet = AWS.@parse_vector(ASCIIString, LibExpat.find(pd, "AttributeName"))
+    o.messageAttributeNameSet = AWS.@parse_vector(ASCIIString, LibExpat.find(pd, "MessageAttributeName"))
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
+    o
+end
+
+export ReceiveMessageType
+
+
+type MessageType
+    messageId::Union{ASCIIString, Void}
+    receiptHandle::Union{ASCIIString, Void}
+    MD5OfBody::Union{ASCIIString, Void}
+    MD5OfMessageAttributes::Union{ASCIIString, Void}
+    body::Union{AbstractString, Void}
+    attributeSet::Union{Vector{AttributeType}, Void}
+    messageAttributeSet::Union{Vector{MessageAttributeType}, Void}
+
+    MessageType(; messageId=nothing, receiptHandle=nothing, MD5OfBody=nothing, MD5OfMessageAttributes=nothing, body=nothing, attributeSet=nothing, messageAttributeSet=nothing) =
+        new(messageId, receiptHandle, MD5OfBody, MD5OfMessageAttributes, body, attributeSet, messageAttributeSet)
+end
+function MessageType(pd::ETree)
+    o = MessageType()
+    o.messageId = LibExpat.find(pd, "MessageId#string")
+    o.receiptHandle = LibExpat.find(pd, "ReceiptHandle#string")
+    o.MD5OfBody = LibExpat.find(pd, "MD5OfBody#string")
+    o.MD5OfMessageAttributes = LibExpat.find(pd, "MD5OfMessageAttributes#string")
+    o.body = LibExpat.find(pd, "Body#string")
+    o.attributeSet = AWS.@parse_vector(AWS.SQS.AttributeType, LibExpat.find(pd, "Attribute"))
+    o.messageAttributeSet = AWS.@parse_vector(AWS.SQS.MessageAttributeType, LibExpat.find(pd, "MessageAttribute"))
+    o
+end
+
+export MessageType
+
+
+type ReceiveMessageResponseType
+    messageSet::Union{Vector{MessageType}, Void}
+    requestId::Union{ASCIIString, Void}
+
+    ReceiveMessageResponseType(; messageSet=nothing, requestId=nothing) =
+         new(messageSet, requestId)
+end
+function ReceiveMessageResponseType(pd::ETree)
+    o = ReceiveMessageResponseType()
+    o.messageSet = AWS.@parse_vector(AWS.SQS.MessageType, LibExpat.find(pd, "ReceiveMessageResult/Message"))
+    o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
+    o
+end
+
+export ReceiveMessageResponseType
 
 
 type SendMessageType

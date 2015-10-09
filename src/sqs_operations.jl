@@ -83,6 +83,23 @@ end
 export ListQueues
 
 
+function ReceiveMessage(env::AWSEnv, msg::ReceiveMessageType)
+    sqsresp::SQSResponse = call_sqs(env, "ReceiveMessage" , msg, true)
+    if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
+        sqsresp.obj = ReceiveMessageResponseType(sqsresp.pd)
+    end
+    sqsresp
+end
+function ReceiveMessage(env::AWSEnv; kwargs...)
+    msg=ReceiveMessageType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    ReceiveMessage(env, msg)
+end
+export ReceiveMessage
+
+
 function SendMessage(env::AWSEnv, msg::SendMessageType)
     sqsresp::SQSResponse = call_sqs(env, "SendMessage" , msg, true)
     if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
@@ -123,6 +140,7 @@ ValidRqstMsgs = Dict(
     "ListQueuesType"=>true,
     "DeleteQueueType"=>true,
     "GetQueueAttributesType"=>true,
+    "ReceiveMessageType"=>true,
     "SendMessageType"=>true,
     "SetQueueAttributesType"=>true
 )

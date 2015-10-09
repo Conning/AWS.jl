@@ -2,6 +2,7 @@
 safe_parseint32(s) = (s != nothing) ? Base.parse(Int32, s) : nothing
 safe_parseint64(s) = (s != nothing) ? Base.parse(Int64, s) : nothing
 safe_parseint(s) = (s != nothing) ? Base.parse(Int, s) : nothing
+safe_parseb64(s) = (s != nothing) ? base64decode(s) : nothing
 safe_parsebool(s) = (s != nothing) ? ((lowercase(s) == "true") ? true : false) : nothing
 
 function safe_parse_as(as::Type, s::Union{AbstractString, Void})
@@ -96,6 +97,7 @@ function aws_string(dt::DateTime)
 end
 
 aws_string(v::Bool) = v ? "True" : "False"
+aws_string(v::Vector{UInt8}) = base64encode(v)
 aws_string(v::Any) = string(v)
 export aws_string
 

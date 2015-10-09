@@ -266,14 +266,36 @@ GetQueueAttributes(env, queueUrl=qurl, attributeNameSet=["All"])
 ```
 msgAttributes = MessageAttributeType[]
 push!(msgAttributes, MessageAttributeType(name="some-attribute",
-  value=MessageAttributeValueType(dataType="Number.subtype", stringValue="0")))
+  value=MessageAttributeValueType(dataType="Number.integer-ish", stringValue="0")))
 push!(msgAttributes, MessageAttributeType(name="other-attribute",
   value=MessageAttributeValueType(dataType="String.yyy", stringValue="My yyy string")))
 push!(msgAttributes, MessageAttributeType(name="bin-attribute",
-  value=MessageAttributeValueType(dataType="Binary.jpg", binaryValue=[0x12,0x19,0x1e,0x11,0x22,0x19])))
+  value=MessageAttributeValueType(dataType="Binary.jpg", binaryValue=[0x0,0x1,0x2,0x3,0x4,0x5,0x6])))
 SendMessage(env; queueUrl=qurl, delaySeconds=0, messageBody="test", messageAttributeSet=msgAttributes)
 ```
-Note: A bug in URIParser.escape (as of the time of this writing) prevents binary in the range of 0-15 from being encoded correctly.
+
+```
+resp=ReceiveMessage(env, queueUrl=qurl, attributeNameSet=["All"], messageAttributeNameSet=["All"])
+first_msg = resp.obj.messageSet[1]
+msg_body = first_msg.body
+  # msg_body == "test"
+first_msg_attribute = first_msg.messageAttributeSet[1]
+attr_name = first_msg_attribute.name
+  # attr_name == "bin-attribute"
+attr_value = first_msg_attribute.value
+attr_type = attr_value.dataType
+  # attr_type == "Binary.jpg"
+attr_custom_subtype = ""
+if in('.', attr_type)
+    attr_type, attr_custom_subtype = split(attr_type, '.', limit=2)
+      # attr_type == "Binary"
+      # attr_custom_subtype == "jpg"
+end
+attr_value = startswith(attr_type, "Binary") ? attr_value.binaryValue :
+             startswith(attr_type, "Number") ? parse(Int, attr_value.stringValue) :
+             first_msg_attribute.stringValue
+  # attr_value == UInt8[0x0,0x1,0x2,0x3,0x4,0x5,0x6]
+```
 
 
 Each of the functions returns an object of type:

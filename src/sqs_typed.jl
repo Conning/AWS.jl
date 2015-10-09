@@ -6,7 +6,7 @@ include("sqs_operations.jl")
 function is_basic_type(v)
     if  isa(v, AbstractString) || isa(v, Int) || isa(v, Int32) ||
         isa(v, Int64) || isa(v, Float64) || isa(v, Bool) ||
-        isa(v, DateTime)
+        isa(v, DateTime) || isa(v, Vector{UInt8})
 
         return true
     end
@@ -38,8 +38,6 @@ function add_to_params(params, obj, pfx)
 
             if is_basic_type(fld_val)
                 push!(params, (pfx * arg_name, aws_string(fld_val)))
-            elseif isa(fld_val, Vector{UInt8})
-                push!(params, (pfx * arg_name, fld_val))
             elseif isa(fld_val, Array)
                 for (idx, fv) in enumerate(fld_val)
                     subarg_name = "$(pfx)$(arg_name).$(idx)"
