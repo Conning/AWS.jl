@@ -15,6 +15,45 @@ end
 export AttributeType
 
 
+# Note: dataType="Binary" is not supported because HTTPC.urlencode_query_params is not presently capable of encoding binary data into a URL.
+# Need to either enhance HTTPClient package, or place binary data into POST message instead of GET.
+type MessageAttributeValueType
+    dataType::Union{AbstractString, Void}
+    binaryValue::Union{Vector{UInt8}, Void}
+    stringValue::Union{AbstractString, Void}
+
+    MessageAttributeValueType(; dataType=nothing, binaryValue=nothing, stringValue=nothing) =
+         new(dataType, binaryValue, stringValue)
+end
+function MessageAttributeValueType(pd::ETree)
+    o = MessageAttributeValueType()
+    o.dataType = LibExpat.find(pd, "DataType#string")
+    # Should BinaryValue be extracted as CDATA or other format instead of a string?
+    o.binaryValue = LibExpat.find(pd, "BinaryValue#string")
+    o.stringValue = LibExpat.find(pd, "StringValue#string")
+    o
+end
+
+export MessageAttributeValueType
+
+
+type MessageAttributeType
+    name::Union{ASCIIString, Void}
+    value::Union{MessageAttributeValueType, Void}
+
+    MessageAttributeType(; name=nothing, value=nothing) =
+         new(name, value)
+end
+function MessageAttributeType(pd::ETree)
+    o = MessageAttributeType()
+    o.name = LibExpat.find(pd, "Name#string")
+    o.value = MessageAttributeValueType(LibExpat.find(pd, "Value[1]"))
+    o
+end
+
+export MessageAttributeType
+
+
 type CreateQueueType
     queueName::Union{ASCIIString, Void}
     attributeSet::Union{Vector{AttributeType}, Void}
@@ -183,6 +222,48 @@ function GetQueueAttributesResponseType(pd::ETree)
 end
 
 export GetQueueAttributesResponseType
+
+
+type SendMessageType
+    delaySeconds::Union{Int, Void}
+    messageAttributeSet::Union{Vector{MessageAttributeType}, Void}
+    messageBody::Union{AbstractString, Void}
+    queueUrl::Union{ASCIIString, Void}
+
+    SendMessageType(; delaySeconds=nothing, messageBody=nothing, queueUrl=nothing) =
+         new(delaySeconds, messageBody, queueUrl)
+end
+function SendMessageType(pd::ETree)
+    o = SendMessageType()
+    o.delaySeconds = AWS.safe_parseint(LibExpat.find(pd, "DelaySeconds#string"))
+    o.messageAttributeSet = AWS.@parse_vector(AWS.SQS.MessageAttributeType, LibExpat.find(pd, "MessageAttribute"))
+    o.messageBody = LibExpat.find(pd, "MessageBody#string")
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
+    o
+end
+
+export SendMessageType
+
+
+type SendMessageResponseType
+    MD5OfMessageBody::Union{ASCIIString, Void}
+    MD5OfMessageAttributes::Union{ASCIIString, Void}
+    messageId::Union{ASCIIString, Void}
+    requestId::Union{ASCIIString, Void}
+
+    SendMessageResponseType(; MD5OfMessageBody=nothing, MD5OfMessageAttributes=nothing, messageId=nothing, requestId=nothing) =
+         new(MD5OfMessageBody, MD5OfMessageAttributes, messageId, requestId)
+end
+function SendMessageResponseType(pd::ETree)
+    o = SendMessageResponseType()
+    o.MD5OfMessageBody = LibExpat.find(pd, "SendMessageResult/MD5OfMessageBody#string")
+    o.MD5OfMessageAttributes = LibExpat.find(pd, "SendMessageResult/MD5OfMessageAttributes#string")
+    o.messageId = LibExpat.find(pd, "SendMessageResult/MessageId#string")
+    o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
+    o
+end
+
+export SendMessageResponseType
 
 
 type SetQueueAttributesType

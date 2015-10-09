@@ -38,6 +38,8 @@ function add_to_params(params, obj, pfx)
 
             if is_basic_type(fld_val)
                 push!(params, (pfx * arg_name, aws_string(fld_val)))
+            elseif isa(fld_val, Vector{UInt8})
+                println("Warning: binary data is not yet supported!")
             elseif isa(fld_val, Array)
                 for (idx, fv) in enumerate(fld_val)
                     subarg_name = "$(pfx)$(arg_name).$(idx)"

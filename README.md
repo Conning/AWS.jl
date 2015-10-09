@@ -243,6 +243,7 @@ Currently the following are available:
 - ListQueues
 - DeleteQueue
 - GetQueueAttributes
+- SendMessage
 - SetQueueAttributes
 
 
@@ -261,6 +262,17 @@ qurl = CreateQueue(env, queueName="testing123", attributeSet=attributes).obj.que
 ```
 GetQueueAttributes(env, queueUrl=qurl, attributeNameSet=["All"])
 ```
+
+```
+msgAttributes = MessageAttributeType[]
+push!(msgAttributes, MessageAttributeType(name="some-attribute",
+  value=MessageAttributeValueType(dataType="Number.xxx", stringValue="0")))
+push!(msgAttributes, MessageAttributeType(name="other-attribute",
+  value=MessageAttributeValueType(dataType="String.yyy", stringValue="My yyy string")))
+SendMessage(env; queueUrl=qurl, delaySeconds=0, messageBody="test", messageAttributeSet=msgAttributes)
+```
+*Note: dataType="Binary" is not supported because HTTPC.urlencode_query_params is not presently capable of encoding binary data.*
+
 
 Each of the functions returns an object of type:
 
