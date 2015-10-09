@@ -39,7 +39,7 @@ function add_to_params(params, obj, pfx)
             if is_basic_type(fld_val)
                 push!(params, (pfx * arg_name, aws_string(fld_val)))
             elseif isa(fld_val, Vector{UInt8})
-                println("Warning: binary data is not yet supported!")
+                push!(params, (pfx * arg_name, fld_val))
             elseif isa(fld_val, Array)
                 for (idx, fv) in enumerate(fld_val)
                     subarg_name = "$(pfx)$(arg_name).$(idx)"
@@ -57,7 +57,7 @@ function add_to_params(params, obj, pfx)
     end
 end
 
-function call_sqs(env::AWSEnv, action::AbstractString, msg=nothing)
+function call_sqs(env::AWSEnv, action::AbstractString, msg=nothing, use_post=false)
     ep = nothing
     params = Array(Tuple, 0)
     if (msg != nothing)
@@ -72,7 +72,7 @@ function call_sqs(env::AWSEnv, action::AbstractString, msg=nothing)
             ep = msg.queueUrl
         end
     end
-    sqs_execute(env, action, ep, params)
+    sqs_execute(env, action, ep, params, use_post)
 end
 
 typebasename(a) = split(string(typeof(a)), ".")[end]

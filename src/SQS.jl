@@ -31,7 +31,7 @@ end
 export SQSResponse
 
 
-function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in=Tuple[])
+function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in, use_post)
     # Adjust endpoint.
     env = env_
     if ep != nothing
@@ -45,12 +45,13 @@ function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in=Tuple[]
     push!(params, ("AWSAccessKeyId", env.aws_id))
     push!(params, ("Timestamp", get_utc_timestamp()))
     push!(params, ("Version", "2012-11-05"))
-#    push!(params, ("Expires", get_utc_timestamp(300))) # Request expires after 300 seconds
 
-    # Support GET for now; add POST later to support larger messages.
-    amz_headers, signed_querystr = canonicalize_and_sign(env, "sqs", "GET", params)
+    amz_headers, data, signed_querystr = canonicalize_and_sign(env, "sqs", params, use_post)
 
-    complete_url = "https://" * ep_host(env, "sqs") * env.ep_path * "?" * signed_querystr
+    complete_url = "https://" * ep_host(env, "sqs") * env.ep_path
+    if length(signed_querystr) > 0
+        complete_url *= "?" * signed_querystr
+    end
     if (env.dbg) || (env.dry_run)
         println("URL:\n$complete_url\n")
     end
@@ -59,7 +60,11 @@ function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in=Tuple[]
     sqsresp = SQSResponse()
     if !(env.dry_run)
         ro = HTTPC.RequestOptions(headers = amz_headers, request_timeout = env.timeout)
-        resp = HTTPC.get(complete_url, ro)
+        if use_post
+            resp = HTTPC.post(complete_url, data, ro)
+        else
+            resp = HTTPC.get(complete_url, ro)
+        end
 
         sqsresp.http_code = resp.http_code
         sqsresp.headers = resp.headers
@@ -80,6 +85,9 @@ function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in=Tuple[]
             if length(sqsresp.body) > 0
                 xom = xp_parse(sqsresp.body)
                 epd = LibExpat.find(xom, "Error[1]")
+                if epd == nothing
+                    error("HTTP error : $(resp.http_code), $(sqsresp.body)")
+                end
                 sqsresp.obj = SQSError(LibExpat.find(epd, "Type#string"), LibExpat.find(epd, "Code#string"), LibExpat.find(epd, "Message#string"), LibExpat.find(epd, "Detail#string"), LibExpat.find(xom, "RequestId#string"))
             else
                 error("HTTP error : $(resp.http_code)")

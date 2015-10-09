@@ -62,7 +62,7 @@ function ec2_execute(env::AWSEnv, action::AbstractString, params_in=nothing)
     push!(params, ("Version", "2015-04-15"))
 #    push!(params, ("Expires", get_utc_timestamp(300))) # Request expires after 300 seconds
 
-    amz_headers, signed_querystr = canonicalize_and_sign(env, "ec2", "GET", params)
+    amz_headers, data, signed_querystr = canonicalize_and_sign(env, "ec2", params)
 
     complete_url = env.ep_scheme * "://" * ep_host(env, "ec2") * ep_path * "?" * signed_querystr
     if (env.dbg) || (env.dry_run)

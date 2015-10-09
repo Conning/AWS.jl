@@ -28,6 +28,7 @@ try
     end
     if !in(qurl, resp.queueUrlSet)
         println("ERROR : Can't find new queue in response from ListQueues")
+        dump(resp.queueUrlSet)
     end
 catch e
     println("ERROR: $e")

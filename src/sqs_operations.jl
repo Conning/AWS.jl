@@ -84,7 +84,7 @@ export ListQueues
 
 
 function SendMessage(env::AWSEnv, msg::SendMessageType)
-    sqsresp::SQSResponse = call_sqs(env, "SendMessage" , msg)
+    sqsresp::SQSResponse = call_sqs(env, "SendMessage" , msg, true)
     if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
         sqsresp.obj = SendMessageResponseType(sqsresp.pd)
     end

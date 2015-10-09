@@ -1,10 +1,10 @@
 import URIParser
 
-function canonicalize_and_sign(env::AWSEnv, service, method, params; sig_ver=env.sig_ver)
+function canonicalize_and_sign(env::AWSEnv, service::ASCIIString, params, use_post=false; sig_ver=env.sig_ver)
     if sig_ver == 2
-      signature_version_2(env, service, method, copy(params))
+      signature_version_2(env, service, copy(params), use_post)
     elseif sig_ver == 4
-      signature_version_4(env, service, method, copy(params))
+      signature_version_4(env, service, copy(params), use_post)
     else
       error("invalid signature version $sig_ver")
     end
@@ -19,7 +19,9 @@ function urlencode_params(params::Vector{Tuple})
         print(buf, URIParser.escape(param[2]))
         print(buf, '&')
     end
-    buf.size -= 1  # trim off last &
+    if buf.size > 0
+        buf.size -= 1  # trim off last &
+    end
     return takebuf_string(buf)
 end
 
@@ -31,11 +33,18 @@ function urlencode_form(params::Vector{Tuple})
         print(buf, URIParser.escape_form(param[2]))
         print(buf, '&')
     end
-    buf.size -= 1  # trim off last &
+    if buf.size > 0
+        buf.size -= 1  # trim off last &
+    end
     return takebuf_string(buf)
 end
 
-function signature_version_2(env::AWSEnv, service, method, request_parameters)
+function signature_version_2(env::AWSEnv, service, request_parameters, use_post)
+    if use_post
+        error("POST is not supported in signature_version_2")
+    end
+    method = "GET"
+
     if env.aws_token != ""
         push!(request_parameters, ("SecurityToken", env.aws_token))
     end
@@ -59,24 +68,29 @@ function signature_version_2(env::AWSEnv, service, method, request_parameters)
         println("--------\nString to sign:\n" * string_to_sign * "\n--------")
     end
 
-    return (Tuple[], urlencode_params(request_parameters))
+    return (Tuple[], "", urlencode_params(request_parameters))
 end
 
-function signature_version_4(env::AWSEnv, service, method, request_parameters)
+function signature_version_4(env::AWSEnv, service, request_parameters, use_post)
     # inputs to request
     sort!(request_parameters)
     amzdate = get_utc_timestamp(; basic=true)
     datestamp = amzdate[1:searchindex(amzdate, "T")-1]
-    payload = "" # Assume empty payload for the moment.
+    msg_body = ""
+    if use_post
+        msg_body = urlencode_form(request_parameters)
+        request_parameters = Array(Tuple, 0)
+    end
 
     # Task 1: canonical request
+    method = use_post ? "POST" : "GET"
     canonical_uri = env.ep_path
     canonical_querystring = urlencode_params(request_parameters)
     canonical_headers = "host:" * ep_host(env, service) * "\n" * "x-amz-date:" * amzdate * "\n"
     signed_headers = "host;x-amz-date"
-    payload_hash = bytes2hex(Crypto.sha256(payload))
+    msg_body_hash = bytes2hex(Crypto.sha256(msg_body))
     canonical_request = method * "\n" * canonical_uri * "\n" * canonical_querystring * "\n" *
-        canonical_headers * "\n" * signed_headers * "\n" * payload_hash
+        canonical_headers * "\n" * signed_headers * "\n" * msg_body_hash
 
     # Task 2: string to sign
     algorithm = "AWS4-HMAC-SHA256"
@@ -95,6 +109,9 @@ function signature_version_4(env::AWSEnv, service, method, request_parameters)
     if env.aws_token != ""
         push!(headers, ("X-Amz-Security-Token", env.aws_token))
     end
+    if use_post
+        push!(headers, ("Content-Type", "application/x-www-form-urlencoded"))
+    end
 
     if (env.dbg) || (env.dry_run)
         println("Parameters:")
@@ -102,15 +119,18 @@ function signature_version_4(env::AWSEnv, service, method, request_parameters)
             println("  $k => $v")
         end
         println("--------\nCanonical request:\n" * canonical_request)
-        println("--------\nString to sign:\n" * string_to_sign * "\n--------")
-        println("Headers:")
+        println("--------\nString to sign:\n" * string_to_sign)
+        println("--------\nHeaders:")
         println("  Host: " * ep_host(env, service))
         for (k, v) in headers
             println("  $k: $v")
         end
+        println("--------\nMessage body:")
+        println("  " * msg_body)
+        println("--------")
     end
 
-    return (headers, urlencode_params(request_parameters))
+    return (headers, msg_body, urlencode_params(request_parameters))
 end
 
 function get_signature_key(key, datestamp, region, service)

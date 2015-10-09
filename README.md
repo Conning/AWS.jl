@@ -266,12 +266,14 @@ GetQueueAttributes(env, queueUrl=qurl, attributeNameSet=["All"])
 ```
 msgAttributes = MessageAttributeType[]
 push!(msgAttributes, MessageAttributeType(name="some-attribute",
-  value=MessageAttributeValueType(dataType="Number.xxx", stringValue="0")))
+  value=MessageAttributeValueType(dataType="Number.subtype", stringValue="0")))
 push!(msgAttributes, MessageAttributeType(name="other-attribute",
   value=MessageAttributeValueType(dataType="String.yyy", stringValue="My yyy string")))
+push!(msgAttributes, MessageAttributeType(name="bin-attribute",
+  value=MessageAttributeValueType(dataType="Binary.jpg", binaryValue=[0x12,0x19,0x1e,0x11,0x22,0x19])))
 SendMessage(env; queueUrl=qurl, delaySeconds=0, messageBody="test", messageAttributeSet=msgAttributes)
 ```
-*Note: dataType="Binary" is not supported because HTTPC.urlencode_query_params is not presently capable of encoding binary data.*
+Note: A bug in URIParser.escape (as of the time of this writing) prevents binary in the range of 0-15 from being encoded correctly.
 
 
 Each of the functions returns an object of type:
