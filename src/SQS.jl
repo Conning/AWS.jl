@@ -7,13 +7,15 @@ using AWS
 
 
 type SQSError
+    typ::AbstractString
     code::AbstractString
     msg::AbstractString
+    detail::AbstractString
     request_id::Union{AbstractString, Void}
 end
 export SQSError
 
-sqs_error_str(o::SQSError) = "code: $(o.code), msg : $(o.msg), $(o.request_id)"
+sqs_error_str(o::SQSError) = "type: $(o.typ), code: $(o.code), msg : $(o.msg), $(o.request_id)"
 export sqs_error_str
 
 
@@ -77,8 +79,8 @@ function sqs_execute(env_::AWSEnv, action::AbstractString, ep, params_in=Tuple[]
         elseif (resp.http_code >= 400) && (resp.http_code <= 599)
             if length(sqsresp.body) > 0
                 xom = xp_parse(sqsresp.body)
-                epd = LibExpat.find(xom, "Errors/Error[1]")
-                sqsresp.obj = SQSError(LibExpat.find(epd, "Code#string"), LibExpat.find(epd, "Message#string"), LibExpat.find(xom, "RequestID#string"))
+                epd = LibExpat.find(xom, "Error[1]")
+                sqsresp.obj = SQSError(LibExpat.find(epd, "Type#string"), LibExpat.find(epd, "Code#string"), LibExpat.find(epd, "Message#string"), LibExpat.find(epd, "Detail#string"), LibExpat.find(xom, "RequestId#string"))
             else
                 error("HTTP error : $(resp.http_code)")
             end

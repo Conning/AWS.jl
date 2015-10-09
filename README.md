@@ -290,8 +290,10 @@ In the event of an error, SQSResponse.obj has an object of type
 
 ```
 type SQSError
+    typ::String
     code::AbstractString
     msg::AbstractString
+    detail::String
     request_id::Union{AbstractString, Void}
 end
 ```
