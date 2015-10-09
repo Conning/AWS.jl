@@ -3,4 +3,5 @@ BinDeps
 LibExpat
 HTTPClient
 JSON
+URIParser
 @windows WinRPM

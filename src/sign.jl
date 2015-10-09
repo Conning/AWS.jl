@@ -1,3 +1,5 @@
+import URIParser
+
 function canonicalize_and_sign(env::AWSEnv, service, method, params; sig_ver=env.sig_ver)
     if sig_ver == 2
       signature_version_2(env, service, method, copy(params))
@@ -9,6 +11,30 @@ function canonicalize_and_sign(env::AWSEnv, service, method, params; sig_ver=env
 end
 export canonicalize_and_sign
 
+function urlencode_params(params::Vector{Tuple})
+    buf = IOBuffer()
+    for param in params
+        print(buf, URIParser.escape(param[1]))
+        print(buf, '=')
+        print(buf, URIParser.escape(param[2]))
+        print(buf, '&')
+    end
+    buf.size -= 1  # trim off last &
+    return takebuf_string(buf)
+end
+
+function urlencode_form(params::Vector{Tuple})
+    buf = IOBuffer()
+    for param in params
+        print(buf, URIParser.escape_form(param[1]))
+        print(buf, '=')
+        print(buf, URIParser.escape_form(param[2]))
+        print(buf, '&')
+    end
+    buf.size -= 1  # trim off last &
+    return takebuf_string(buf)
+end
+
 function signature_version_2(env::AWSEnv, service, method, request_parameters)
     if env.aws_token != ""
         push!(request_parameters, ("SecurityToken", env.aws_token))
@@ -17,7 +43,7 @@ function signature_version_2(env::AWSEnv, service, method, request_parameters)
     push!(request_parameters, ("SignatureMethod", "HmacSHA256"))
     sort!(request_parameters)
 
-    canonical_querystring = HTTPC.urlencode_query_params(request_parameters)
+    canonical_querystring = urlencode_params(request_parameters)
 
     string_to_sign = method * "\n" * ep_host(env, service) * "\n" * env.ep_path * "\n" * canonical_querystring
 
@@ -33,7 +59,7 @@ function signature_version_2(env::AWSEnv, service, method, request_parameters)
         println("--------\nString to sign:\n" * string_to_sign * "\n--------")
     end
 
-    return (Tuple[], HTTPC.urlencode_query_params(request_parameters))
+    return (Tuple[], urlencode_params(request_parameters))
 end
 
 function signature_version_4(env::AWSEnv, service, method, request_parameters)
@@ -45,7 +71,7 @@ function signature_version_4(env::AWSEnv, service, method, request_parameters)
 
     # Task 1: canonical request
     canonical_uri = env.ep_path
-    canonical_querystring = HTTPC.urlencode_query_params(request_parameters)
+    canonical_querystring = urlencode_params(request_parameters)
     canonical_headers = "host:" * ep_host(env, service) * "\n" * "x-amz-date:" * amzdate * "\n"
     signed_headers = "host;x-amz-date"
     payload_hash = bytes2hex(Crypto.sha256(payload))
@@ -84,7 +110,7 @@ function signature_version_4(env::AWSEnv, service, method, request_parameters)
         end
     end
 
-    return (headers, HTTPC.urlencode_query_params(request_parameters))
+    return (headers, urlencode_params(request_parameters))
 end
 
 function get_signature_key(key, datestamp, region, service)
