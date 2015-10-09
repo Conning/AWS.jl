@@ -256,11 +256,11 @@ env=AWSEnv()
 attributes = AttributeType[]
 push!(attributes, AttributeType(name="DelaySeconds",value="300"))
 push!(attributes, AttributeType(name="VisibilityTimeout",value="120")
-qurl = CreateQueue(env, queueName="testing123", attributeSet=attributes).obj.queueUrl
+qurl = CreateQueue(env; queueName="testing123", attributeSet=attributes).obj.queueUrl
 ```
 
 ```
-GetQueueAttributes(env, queueUrl=qurl, attributeNameSet=["All"])
+GetQueueAttributes(env; queueUrl=qurl, attributeNameSet=["All"])
 ```
 
 ```
@@ -275,7 +275,7 @@ SendMessage(env; queueUrl=qurl, delaySeconds=0, messageBody="test", messageAttri
 ```
 
 ```
-resp=ReceiveMessage(env, queueUrl=qurl, attributeNameSet=["All"], messageAttributeNameSet=["All"])
+resp=ReceiveMessage(env; queueUrl=qurl, attributeNameSet=["All"], messageAttributeNameSet=["All"])
 first_msg = resp.obj.messageSet[1]
 msg_body = first_msg.body
   # msg_body == "test"
