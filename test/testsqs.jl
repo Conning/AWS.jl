@@ -22,13 +22,17 @@ try
         println("ERROR : Mismatch between queueUrl returned by CreateQueue and GetQueueUrl")
     end
 
-    resp = ListQueues(env).obj
-    if isa(resp, SQSError)
-        throw(resp)
-    end
-    if !in(qurl, resp.queueUrlSet)
-        println("ERROR : Can't find new queue in response from ListQueues")
-        dump(resp.queueUrlSet)
+    tries = 0
+    maxtries = 24
+    delay = 5
+    while maxtries > (tries += 1)
+        resp = ListQueues(env).obj
+        if isa(resp, SQSError)
+            throw(resp)
+        end
+        in(qurl, resp.queueUrlSet) && break
+        println("WARNING : New queue is not in response from ListQueues; trying again in $delay seconds")
+        sleep(delay)
     end
 
     msgAttributes = MessageAttributeType[]
@@ -58,6 +62,11 @@ try
     end
     if resp.messageSet[1].messageAttributeSet[1].value.binaryValue != [0x0,0x1,0x2,0x3,0x4,0x5,0x6]
         println("ERROR : Send / receive message attribute mismatch")
+    end
+
+    resp = DeleteMessage(env; queueUrl=qurl, receiptHandle=resp.messageSet[1].receiptHandle).obj
+    if isa(resp, SQSError)
+        throw(resp)
     end
 
 catch e

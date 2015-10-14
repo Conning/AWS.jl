@@ -156,8 +156,36 @@ export ListQueuesResponseType
 # ChangeMessageVisibilityType
 # ChangeMessageVisibilityResponseType
 
-# DeleteMessageType
-# DeleteMessageResponseType
+type DeleteMessageType
+    queueUrl::Union{ASCIIString, Void}
+    receiptHandle::Union{ASCIIString, Void}
+
+    DeleteMessageType(; queueUrl=nothing, receiptHandle=nothing) =
+         new(queueUrl, receiptHandle)
+end
+function DeleteMessageType(pd::ETree)
+    o = DeleteMessageType()
+    o.queueUrl = LibExpat.find(pd, "QueueUrl#string")
+    o.receiptHandle = LibExpat.find(pd, "ReceiptHandle#string")
+    o
+end
+
+export DeleteMessageType
+
+
+type DeleteMessageResponseType
+    requestId::Union{ASCIIString, Void}
+
+    DeleteMessageResponseType(; requestId=nothing) =
+         new(requestId)
+end
+function DeleteMessageResponseType(pd::ETree)
+    o = DeleteMessageResponseType()
+    o.requestId = LibExpat.find(pd, "ResponseMetadata/RequestId#string")
+    o
+end
+
+export DeleteMessageResponseType
 
 type DeleteQueueType
     queueUrl::Union{ASCIIString, Void}

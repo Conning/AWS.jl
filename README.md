@@ -295,6 +295,7 @@ attr_value = startswith(attr_type, "Binary") ? attr_value.binaryValue :
              startswith(attr_type, "Number") ? parse(Int, attr_value.stringValue) :
              first_msg_attribute.stringValue
   # attr_value == UInt8[0x0,0x1,0x2,0x3,0x4,0x5,0x6]
+DeleteMessage(env; queueUrl=qurl, receiptHandle=first_msg.receiptHandle)
 ```
 
 

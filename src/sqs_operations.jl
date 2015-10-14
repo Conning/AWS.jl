@@ -134,11 +134,28 @@ end
 export SetQueueAttributes
 
 
+function DeleteMessage(env::AWSEnv, msg::DeleteMessageType)
+    sqsresp::SQSResponse = call_sqs(env, "DeleteMessage" , msg)
+    if  (sqsresp.pd != nothing) && (sqsresp.obj == nothing)
+        sqsresp.obj = DeleteMessageResponseType(sqsresp.pd)
+    end
+    sqsresp
+end
+function DeleteMessage(env::AWSEnv; kwargs...)
+    msg=DeleteMessageType()
+    for p in kwargs
+        setfield!(msg, p[1], p[2])
+    end
+    DeleteMessage(env, msg)
+end
+export DeleteMessage
+
 ValidRqstMsgs = Dict(
     "CreateQueueType"=>true,
     "GetQueueUrlType"=>true,
     "ListQueuesType"=>true,
     "DeleteQueueType"=>true,
+    "DeleteMessageType"=>true,
     "GetQueueAttributesType"=>true,
     "ReceiveMessageType"=>true,
     "SendMessageType"=>true,
