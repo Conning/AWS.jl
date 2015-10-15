@@ -22,15 +22,19 @@ try
         println("ERROR : Mismatch between queueUrl returned by CreateQueue and GetQueueUrl")
     end
 
-    tries = 0
-    maxtries = 24
+    tries = 1
+    maxtries = 13
     delay = 5
-    while maxtries > (tries += 1)
+    while true
         resp = ListQueues(env).obj
         if isa(resp, SQSError)
             throw(resp)
         end
         in(qurl, resp.queueUrlSet) && break
+        if maxtries < (tries += 1)
+            println("WARNING : New queue is not in response from ListQueues; giving up")
+            break
+        end
         println("WARNING : New queue is not in response from ListQueues; trying again in $delay seconds")
         sleep(delay)
     end
