@@ -95,7 +95,7 @@ function get_instance_credentials()
         end
 
         url = "http://169.254.169.254/2014-11-05/meta-data/iam/security-credentials/"
-        resp = HTTPC.get(url)
+        resp = HTTPC.get(url, HTTPC.RequestOptions())
         if resp.http_code != 200
             return nothing
         end
@@ -106,7 +106,7 @@ function get_instance_credentials()
         end
 
         url *= iam[1]
-        resp = HTTPC.get(url)
+        resp = HTTPC.get(url, HTTPC.RequestOptions())
         if resp.http_code != 200
             return nothing
         end
