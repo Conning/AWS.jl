@@ -5,6 +5,7 @@ using AWS.Crypto
 using Requests
 using AWS.AWSEnv
 using AWS
+using Compat
 
 import AWS.xml
 import Base.show

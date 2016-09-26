@@ -4,7 +4,7 @@ module AWS
 using Requests
 using JSON
 using LightXML
-
+using Compat
 
 const EP_US_EAST_NORTHERN_VIRGINIA     = "ec2.us-east-1.amazonaws.com"
 const EP_US_WEST_OREGON                = "ec2.us-west-2.amazonaws.com"
@@ -30,24 +30,26 @@ const US_WEST_2 = "us-west-2" # US West (Oregon) Region
 
 
 function __init__()
-    config_file_base = OS_NAME == :Windows ? ENV["APPDATA"] : homedir()
+    config_file_base = is_windows() ? ENV["APPDATA"] : homedir()
 
     # Search for default AWS_ID and AWS_SECKEY
-    global const AWS_ID = ""
-    global const AWS_SECKEY = ""
-    global const AWS_TOKEN = ""
+    aws_id = ""
+    aws_seckey = ""
     if haskey(ENV, "AWS_ID") && haskey(ENV, "AWS_SECKEY")
-        AWS_ID = ENV["AWS_ID"]
-        AWS_SECKEY = ENV["AWS_SECKEY"]
+        aws_id = ENV["AWS_ID"]
+        aws_seckey = ENV["AWS_SECKEY"]
     elseif haskey(ENV, "AWS_ACCESS_KEY_ID") && haskey(ENV, "AWS_SECRET_ACCESS_KEY")
-        AWS_ID = ENV["AWS_ACCESS_KEY_ID"]
-        AWS_SECKEY = ENV["AWS_SECRET_ACCESS_KEY"]
+        aws_id = ENV["AWS_ACCESS_KEY_ID"]
+        aws_seckey = ENV["AWS_SECRET_ACCESS_KEY"]
     else
         secret_path = joinpath(config_file_base, ".awssecret")
         if isfile(secret_path)
-            AWS_ID, AWS_SECKEY = split(readchomp(secret_path))
+            aws_id, aws_seckey = split(readchomp(secret_path))
         end
     end
+    global const AWS_ID = aws_id
+    global const AWS_SECKEY = aws_seckey
+    global const AWS_TOKEN = ""
 
     # Search for default AWS_REGION
     global const AWS_REGION = US_EAST_1
@@ -64,11 +66,11 @@ function __init__()
 end
 
 type AWSEnv
-    aws_id::ASCIIString         # AWS Access Key id
-    aws_seckey::ASCIIString     # AWS Secret key for signing requests
-    aws_token::ASCIIString      # AWS Security Token for temporary credentials
+    aws_id::Compat.ASCIIString         # AWS Access Key id
+    aws_seckey::Compat.ASCIIString     # AWS Secret key for signing requests
+    aws_token::Compat.ASCIIString      # AWS Security Token for temporary credentials
     region::AbstractString      # region name
-	ep_scheme::ASCIIString      # URL scheme: http or https
+	ep_scheme::Compat.ASCIIString      # URL scheme: http or https
     ep_host::AbstractString     # region endpoint (host)
     ep_path::AbstractString     # region endpoint (path)
     sig_ver::Int                # AWS signature version (2 or 4)
