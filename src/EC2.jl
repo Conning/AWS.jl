@@ -76,7 +76,7 @@ function ec2_execute(env::AWSEnv, action::AbstractString, params_in=nothing)
         println("URL:\n$complete_url\n")
     end
 
-	headers = Dict{ASCIIString, ASCIIString}()
+	headers = Dict{Compat.ASCIIString, Compat.ASCIIString}()
 
 	for (k,v) in amz_headers
 		setindex!(headers, v, k)
