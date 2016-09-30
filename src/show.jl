@@ -3,11 +3,12 @@ module Showing
 using AWS
 using AWS.EC2
 using AWS.S3
+using Compat
 
 import Base.show, Base.Meta.quot
 
 print_indented(io::IO,s,indent) = print(io," "^indent,s)
-show_indented(io::IO,s::ASCIIString,indent) = print(io,s*"\n")
+show_indented(io::IO,s::Compat.ASCIIString,indent) = print(io,s*"\n")
 show_indented(io::IO,::Void,indent) = print(io,"Not set\n")
 show_indented(io::IO,i,indent) = println(io,i)
 
@@ -50,7 +51,7 @@ end
 # Create default show method for all types
 for m in [AWS, AWS.EC2, AWS.S3]
     for n in names(m)
-        t = (m).(n)
+        t = getfield(m,n)
         if isa(t,Type)
             @eval @show_func $n $t
         end

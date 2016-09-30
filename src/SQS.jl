@@ -6,7 +6,7 @@ using Requests
 using LightXML
 using AWS.AWSEnv
 using AWS
-
+using Compat
 
 type SQSError
     typ::AbstractString
